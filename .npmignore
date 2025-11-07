@@ -1,0 +1,53 @@
+# Source files (only include dist/)
+src/
+*.ts
+*.tsx
+!*.d.ts
+
+# Build artifacts
+tsconfig.json
+tsconfig.*.json
+
+# Examples and tests
+examples/
+test/
+tests/
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation (keep README.md, LICENSE)
+SUMMARY.md
+PROJECT_STRUCTURE.md
+CONTRIBUTING.md
+QUICKSTART.md
+
+# Development files
+.git/
+.gitignore
+.gitattributes
+.editorconfig
+.vscode/
+.idea/
+
+# Scripts
+*.sh
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules
+node_modules/
+
+# Lock files
+bun.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

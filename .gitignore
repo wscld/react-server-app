@@ -1,0 +1,12 @@
+node_modules
+examples
+*.log
+.DS_Store
+.env
+.env.local
+SUMMARY.md
+HOW_IT_WORKS.md
+Dockerfile
+.dockerignore
+docker-compose.yml
+bun.lock

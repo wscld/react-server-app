@@ -1,0 +1,59 @@
+{
+  "name": "react-server-app",
+  "version": "0.1.0",
+  "description": "A React-based server framework where API routes are defined using JSX",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "react",
+    "server",
+    "fastify",
+    "jsx",
+    "api",
+    "routing",
+    "framework",
+    "typescript",
+    "bun"
+  ],
+  "author": "Wesley Caldas",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wesleycaldas/react-server-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wesleycaldas/react-server-app/issues"
+  },
+  "homepage": "https://github.com/wesleycaldas/react-server-app#readme",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "bun run clean && bun run build"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "fastify": "^4.28.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.2",
+    "bun-types": "^1.1.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  }
+}
