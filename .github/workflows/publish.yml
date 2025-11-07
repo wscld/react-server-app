@@ -3,8 +3,8 @@ name: Publish to npm
 on:
   push:
     tags:
-      - "v*" # Triggers on version tags like v1.0.0, v0.1.0, etc.
-  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+      - "v*"
+  workflow_dispatch:
 
 jobs:
   publish:
