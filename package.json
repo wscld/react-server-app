@@ -31,12 +31,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wesleycaldas/react-server-app.git"
+    "url": "git+https://github.com/wscld/react-server-app.git"
   },
   "bugs": {
-    "url": "https://github.com/wesleycaldas/react-server-app/issues"
+    "url": "https://github.com/wscld/react-server-app/issues"
   },
-  "homepage": "https://github.com/wesleycaldas/react-server-app#readme",
+  "homepage": "https://github.com/wscld/react-server-app#readme",
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
