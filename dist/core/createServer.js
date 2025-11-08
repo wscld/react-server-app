@@ -1,22 +1,8 @@
 import Fastify from "fastify";
 import React from "react";
+import { renderToString } from "react-dom/server";
 import { collectRoutes } from "./collectRoutes";
 import { isResponseElement, isPageElement, resolveWithContext } from "./responseUtils";
-// Dynamically import renderToString to avoid bundling issues
-let renderToString = null;
-async function ensureReactDOMServer() {
-    if (!renderToString) {
-        try {
-            const ReactDOMServer = await import("react-dom/server");
-            renderToString = ReactDOMServer.renderToString;
-        }
-        catch (error) {
-            console.warn("react-dom/server not available. Page component will not work without it.");
-            throw new Error("react-dom is required to use the Page component. Please install it: npm install react-dom");
-        }
-    }
-    return renderToString;
-}
 /**
  * Creates and starts a Fastify server from a React element tree
  *
@@ -82,7 +68,6 @@ export async function createServer(element) {
                     const result = await route.handler(context);
                     // If the handler returned a Page element, render it to HTML
                     if (isPageElement(result)) {
-                        const renderFn = await ensureReactDOMServer();
                         const props = result.props || {};
                         // Resolve context-based props
                         const title = resolveWithContext(props.title ?? "React App", context);
@@ -101,9 +86,7 @@ export async function createServer(element) {
                         let contentHtml = "";
                         if (props.children) {
                             try {
-                                if (renderFn) {
-                                    contentHtml = renderFn(props.children);
-                                }
+                                contentHtml = renderToString(props.children);
                             }
                             catch (error) {
                                 fastify.log.error({ error }, "Error rendering Page content");

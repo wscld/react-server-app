@@ -81,7 +81,11 @@ export interface PageProps {
      */
     rootId?: string;
 } /**
- * Page component - renders a full HTML page with React DOM content as an SPA
+ * Page component - renders a full HTML page with React components server-side rendered to static HTML
+ *
+ * The Page component compiles your React components into static HTML on the server in real-time.
+ * This is pure server-side rendering (SSR) - the React components are rendered to HTML strings
+ * and sent to the browser. No React runtime is loaded on the client unless you explicitly add it.
  *
  * @example
  * <Route
@@ -91,7 +95,7 @@ export interface PageProps {
  *     <Page title="Dashboard">
  *       <div>
  *         <h1>Welcome to Dashboard</h1>
- *         <p>This is a React SPA!</p>
+ *         <p>This is server-rendered HTML!</p>
  *       </div>
  *     </Page>
  *   )}

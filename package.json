@@ -1,6 +1,6 @@
 {
   "name": "react-server-app",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A React-based server framework where API routes are defined using JSX",
   "type": "module",
   "main": "dist/index.js",
@@ -45,13 +45,13 @@
   },
   "dependencies": {
     "fastify": "^4.28.1",
-    "react": "^18.3.1",
-    "react-dom": "^19.2.0"
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
-    "@types/react": "^18.3.1",
-    "@types/react-dom": "^19.2.2",
+    "@types/react": "18.3.1",
+    "@types/react-dom": "18.3.1",
     "bun-types": "^1.1.0",
     "typescript": "^5.5.2"
   },
