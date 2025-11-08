@@ -6,9 +6,12 @@ import { collectRoutes } from "./collectRoutes";
 import { isResponseElement, isPageElement, resolveWithContext } from "./responseUtils";
 import { bundleComponentFile } from "./bundler";
 import { extractComponentInfo, isClientComponent } from "./componentExtractor";
+import * as crypto from "crypto";
 
 // Store for component bundles served as static files
 const componentBundles = new Map<string, string>();
+// Store for initial props scripts
+const propsScripts = new Map<string, string>();
 
 /**
  * Creates and starts a Fastify server from a React element tree
@@ -50,6 +53,21 @@ export async function createServer(element: React.ReactElement): Promise<Fastify
     reply.header("Content-Type", "application/javascript; charset=utf-8");
     reply.header("Cache-Control", "public, max-age=31536000, immutable");
     return reply.send(bundle);
+  });
+
+  // Register route to serve initial props scripts
+  fastify.get("/__props/:hash.js", async (request, reply) => {
+    const { hash } = request.params as { hash: string };
+    const script = propsScripts.get(hash);
+
+    if (!script) {
+      reply.code(404);
+      return { error: "Props script not found" };
+    }
+
+    reply.header("Content-Type", "application/javascript; charset=utf-8");
+    reply.header("Cache-Control", "public, max-age=31536000, immutable");
+    return reply.send(script);
   });
 
   // Register routes with Fastify
@@ -119,7 +137,7 @@ export async function createServer(element: React.ReactElement): Promise<Fastify
 
             // Handle client-side component bundling for SPA mode
             let clientBundleHash: string | null = null;
-            let clientPropsScript = "";
+            let clientPropsHash: string | null = null;
 
             if (isSPA && props.children && React.isValidElement(props.children)) {
               // Auto-detect and bundle the component
@@ -134,9 +152,11 @@ export async function createServer(element: React.ReactElement): Promise<Fastify
                   // Store the bundle so we can serve it
                   componentBundles.set(clientBundleHash, bundle.code);
 
-                  // Serialize the component props for the client
+                  // Create and store the props script
                   const serializedProps = JSON.stringify(componentInfo.props);
-                  clientPropsScript = `<script>window.__INITIAL_PROPS__ = ${serializedProps};</script>`;
+                  const propsScript = `window.__INITIAL_PROPS__ = ${serializedProps};`;
+                  clientPropsHash = crypto.createHash("md5").update(propsScript).digest("hex");
+                  propsScripts.set(clientPropsHash, propsScript);
                 } catch (error) {
                   fastify.log.error(
                     { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined },
@@ -229,7 +249,7 @@ export async function createServer(element: React.ReactElement): Promise<Fastify
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${escapeHtml(title)}</title>${metaTags ? "\n    " + metaTags : ""}${linkTags ? "\n    " + linkTags : ""}${
               styles ? `\n    <style>${styles}</style>` : ""
-            }${clientPropsScript ? "\n    " + clientPropsScript : ""}${scriptTags ? "\n    " + scriptTags : ""}${
+            }${scriptTags ? "\n    " + scriptTags : ""}${clientPropsHash ? `\n    <script type="module" src="/__props/${clientPropsHash}.js"></script>` : ""}${
               clientBundleHash ? `\n    <script type="module" src="/__bundles/${clientBundleHash}.js"></script>` : ""
             }
   </head>

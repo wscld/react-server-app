@@ -211,7 +211,7 @@ if (root) {
                     },
                 },
                 write: true,
-                target: 'es2015',
+                target: "es2015",
             },
             plugins: [
                 // @ts-ignore - Vite plugin is an optional dependency
