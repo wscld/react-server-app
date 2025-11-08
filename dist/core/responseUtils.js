@@ -34,4 +34,8 @@ export function getHeader(name) {
 export function isResponseElement(val) {
     return React.isValidElement(val) && val.type?.displayName === "Response";
 }
+// Detect if something is a React element of our Page type
+export function isPageElement(val) {
+    return React.isValidElement(val) && val.type?.displayName === "Page";
+}
 //# sourceMappingURL=responseUtils.js.map

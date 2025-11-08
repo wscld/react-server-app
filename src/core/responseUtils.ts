@@ -40,3 +40,8 @@ export function getHeader(name: string) {
 export function isResponseElement(val: any) {
   return React.isValidElement(val) && (val.type as any)?.displayName === "Response";
 }
+
+// Detect if something is a React element of our Page type
+export function isPageElement(val: any) {
+  return React.isValidElement(val) && (val.type as any)?.displayName === "Page";
+}

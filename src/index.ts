@@ -3,6 +3,7 @@ export { App } from "./components/App";
 export { Controller } from "./components/Controller";
 export { Route } from "./components/Route";
 export { Response } from "./components/Response";
+export { Page } from "./components/Page";
 export { Middleware } from "./components/Middleware";
 export { Guard } from "./components/Guard";
 export { useContext as useRequestContext } from "./core/responseUtils";
@@ -23,3 +24,5 @@ export type {
   HTTPMethod,
   CollectedRoute,
 } from "./types";
+
+export type { PageProps } from "./components/Page";

@@ -120,4 +120,8 @@ interface User {
 - [ ] React reconciler for advanced use cases
 - [ ] CLI tool for scaffolding projects
 
+## Follow Me
+
+Follow me on X (Twitter) [@wescld](https://x.com/wescld) for updates and more projects!
+
 Built with ❤️ using React, Fastify, and Bun.
