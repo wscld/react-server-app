@@ -12,6 +12,7 @@ export { useContext as useRequestContext } from "./core/responseUtils";
 export { createServer } from "./core/createServer";
 export { collectRoutes } from "./core/collectRoutes";
 export { configure, getConfig } from "./config";
+export { registerComponent } from "./core/componentExtractor";
 
 // Types
 export type {

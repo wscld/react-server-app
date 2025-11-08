@@ -1,5 +1,9 @@
 import React from "react";
 /**
+ * Register a component with its file path (useful for ES modules in Node.js)
+ */
+export declare function registerComponent(component: Function, filePath: string): void;
+/**
  * Extract component information from a React element
  */
 export declare function extractComponentInfo(element: React.ReactElement): {

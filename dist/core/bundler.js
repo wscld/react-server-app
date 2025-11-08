@@ -10,7 +10,12 @@ const bundleCache = new Map();
  */
 export async function bundleComponentFile(filePath, options) {
     const config = getConfig();
-    const bundler = config.bundler || "bun";
+    let bundler = config.bundler || "bun";
+    // Auto-detect: if Bun is not available, use Vite
+    if (bundler === "bun" && typeof Bun === "undefined") {
+        console.log("[bundler] Bun not available, falling back to Vite");
+        bundler = "vite";
+    }
     if (bundler === "vite") {
         return bundleWithVite(filePath, options);
     }

@@ -42,10 +42,7 @@ export async function createServer(element: React.ReactElement): Promise<Fastify
       });
       console.log(`📁 Static files enabled: ${staticDir} -> ${staticPrefix}`);
     } catch (error) {
-      console.warn(
-        "⚠️  Static file serving requested but @fastify/static is not installed.",
-        "\n   Install it with: bun add @fastify/static"
-      );
+      console.warn("⚠️  Static file serving requested but @fastify/static is not installed.", "\n   Install it with: bun add @fastify/static");
     }
   }
 
