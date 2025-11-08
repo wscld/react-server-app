@@ -71,7 +71,7 @@ if (root) {
         console.log("Starting Bun.build with config:", {
             entrypoints: [entryFile],
             outdir: tmpDir,
-            naming: `bundle-${hash}.js`,
+            naming: { entry: `bundle-${hash}.js` },
             target: "browser",
         });
         let build;
@@ -79,7 +79,9 @@ if (root) {
             build = await Bun.build({
                 entrypoints: [entryFile],
                 outdir: tmpDir,
-                naming: `bundle-${hash}.js`,
+                naming: {
+                    entry: `bundle-${hash}.js`,
+                },
                 minify: options?.minify ?? config.minify,
                 sourcemap: options?.sourcemap ?? config.sourcemap ? "inline" : "none",
                 target: "browser",

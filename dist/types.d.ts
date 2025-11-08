@@ -35,6 +35,8 @@ export interface ControllerProps {
 export interface AppProps {
     port?: number;
     host?: string;
+    staticDir?: string;
+    staticPrefix?: string;
     children: React.ReactNode;
 }
 export interface CollectedRoute {

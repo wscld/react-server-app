@@ -45,6 +45,8 @@ export interface ControllerProps {
 export interface AppProps {
   port?: number;
   host?: string;
+  staticDir?: string; // Path to static files directory
+  staticPrefix?: string; // URL prefix for static files (default: '/')
   children: React.ReactNode;
 }
 

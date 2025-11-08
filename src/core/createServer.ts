@@ -23,11 +23,31 @@ export async function createServer(element: React.ReactElement): Promise<Fastify
   const props = element.props as AppProps;
   const port = props.port ?? 3000;
   const host = props.host ?? "0.0.0.0";
+  const staticDir = props.staticDir;
+  const staticPrefix = props.staticPrefix ?? "/";
 
   // Create Fastify instance
   const fastify = Fastify({
     logger: true,
   });
+
+  // Register static file serving if configured
+  if (staticDir) {
+    try {
+      // @ts-ignore - fastify-static types may not be available
+      const fastifyStatic = await import("@fastify/static");
+      await fastify.register(fastifyStatic.default, {
+        root: staticDir,
+        prefix: staticPrefix,
+      });
+      console.log(`📁 Static files enabled: ${staticDir} -> ${staticPrefix}`);
+    } catch (error) {
+      console.warn(
+        "⚠️  Static file serving requested but @fastify/static is not installed.",
+        "\n   Install it with: bun add @fastify/static"
+      );
+    }
+  }
 
   // Collect all routes from the React tree (traverse App's children)
   const children = React.Children.toArray(props.children);
