@@ -20,9 +20,20 @@
 ## 📦 Installation
 
 ```bash
-bun add react-server-app react
+# Basic installation
+bun add react-server-app react react-dom
 # or
-npm install react-server-app react
+npm install react-server-app react react-dom
+```
+
+**For SPA mode (optional):**
+
+If you want to use the `<Page>` component with `spa={true}` for client-side React apps, you'll also need to install Vite:
+
+```bash
+bun add vite @vitejs/plugin-react
+# or
+npm install vite @vitejs/plugin-react
 ```
 
 ## Quick Start
@@ -155,6 +166,8 @@ import Dashboard from "./pages/Dashboard";
 4. **Full Interactivity** - `useState`, `useEffect`, event handlers, and all React features work as expected
 5. **Smart Caching** - Bundles and props are cached with MD5 hashes and served with immutable cache headers
 
+> **Note:** SPA mode requires `vite` and `@vitejs/plugin-react` to be installed. When using Node.js, the framework automatically falls back to Vite. With Bun runtime, you can use either Bun's built-in bundler or Vite.
+
 **Configure Bundler:**
 
 ```tsx
@@ -162,7 +175,7 @@ import { configure } from "react-server-app";
 
 // Set bundler preference (vite or bun)
 configure({
-  bundler: "vite",
+  bundler: "vite", // or "bun" (requires Bun runtime)
   minify: true,
   cache: true,
 });

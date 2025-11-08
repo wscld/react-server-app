@@ -16,7 +16,7 @@ function extractFilePathFromStack(component, componentName) {
     try {
         // Trigger component execution to get its stack trace
         // Create a custom error inside the component's context
-        let capturedStack = '';
+        let capturedStack = "";
         try {
             // Try to call toString on the component to see its source
             const funcStr = component.toString();
@@ -31,12 +31,12 @@ function extractFilePathFromStack(component, componentName) {
         // by examining all modules and finding files that might contain this component name
         const searchDirs = [
             process.cwd(),
-            path.join(process.cwd(), 'src'),
-            path.join(process.cwd(), 'pages'),
-            path.join(process.cwd(), 'components'),
-            path.join(process.cwd(), 'examples'),
-            path.join(process.cwd(), 'demo'),
-            path.join(process.cwd(), '../'),
+            path.join(process.cwd(), "src"),
+            path.join(process.cwd(), "pages"),
+            path.join(process.cwd(), "components"),
+            path.join(process.cwd(), "examples"),
+            path.join(process.cwd(), "demo"),
+            path.join(process.cwd(), "../"),
         ];
         // Recursively search for files with the component name
         return searchForComponentRecursive(componentName, searchDirs);
@@ -50,7 +50,7 @@ function extractFilePathFromStack(component, componentName) {
  * Recursively search for a component file
  */
 function searchForComponentRecursive(componentName, searchDirs, maxDepth = 3) {
-    const possibleExtensions = ['.tsx', '.ts', '.jsx', '.js'];
+    const possibleExtensions = [".tsx", ".ts", ".jsx", ".js"];
     for (const dir of searchDirs) {
         if (!fs.existsSync(dir))
             continue;
@@ -85,11 +85,7 @@ function searchDirectory(dir, componentName, extensions, depth, maxDepth) {
         }
         // Then recurse into subdirectories
         for (const entry of entries) {
-            if (entry.isDirectory() &&
-                !entry.name.startsWith('.') &&
-                entry.name !== 'node_modules' &&
-                entry.name !== 'dist' &&
-                entry.name !== 'build') {
+            if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules" && entry.name !== "dist" && entry.name !== "build") {
                 const result = searchDirectory(path.join(dir, entry.name), componentName, extensions, depth + 1, maxDepth);
                 if (result)
                     return result;
