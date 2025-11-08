@@ -11,6 +11,7 @@ export { useContext as useRequestContext } from "./core/responseUtils";
 // Core functions
 export { createServer } from "./core/createServer";
 export { collectRoutes } from "./core/collectRoutes";
+export { configure, getConfig } from "./config";
 
 // Types
 export type {
@@ -26,3 +27,4 @@ export type {
 } from "./types";
 
 export type { PageProps } from "./components/Page";
+export type { ReactServerAppConfig } from "./config";

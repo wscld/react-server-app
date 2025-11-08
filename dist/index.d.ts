@@ -8,6 +8,8 @@ export { Guard } from "./components/Guard";
 export { useContext as useRequestContext } from "./core/responseUtils";
 export { createServer } from "./core/createServer";
 export { collectRoutes } from "./core/collectRoutes";
+export { configure, getConfig } from "./config";
 export type { AppProps, ControllerProps, RouteProps, RouteHandler, RouteContext, Middleware as MiddlewareFunction, Guard as GuardFunction, HTTPMethod, CollectedRoute, } from "./types";
 export type { PageProps } from "./components/Page";
+export type { ReactServerAppConfig } from "./config";
 //# sourceMappingURL=index.d.ts.map

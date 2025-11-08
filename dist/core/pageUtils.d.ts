@@ -3,6 +3,7 @@ export interface PageElement {
     type: any;
     props: {
         children?: React.ReactNode;
+        spa?: boolean;
         title?: string | ((ctx: any) => string);
         meta?: Array<{
             name?: string;

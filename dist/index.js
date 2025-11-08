@@ -10,4 +10,5 @@ export { useContext as useRequestContext } from "./core/responseUtils";
 // Core functions
 export { createServer } from "./core/createServer";
 export { collectRoutes } from "./core/collectRoutes";
+export { configure, getConfig } from "./config";
 //# sourceMappingURL=index.js.map

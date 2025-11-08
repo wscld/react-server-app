@@ -3,8 +3,17 @@ import React from 'react';
 export interface PageProps {
     /**
      * The React component/elements to render as the page content
+     * - For static SSR: pass any React elements
+     * - For client-side SPA: pass a single function component (will be auto-bundled)
      */
-    children: React.ReactNode;
+    children?: React.ReactNode;
+
+    /**
+     * Enable client-side rendering (SPA mode)
+     * When true, the component in children will be bundled and rendered client-side
+     * @default false
+     */
+    spa?: boolean;
 
     /**
      * Page title (will be set in <title> tag)
@@ -66,25 +75,23 @@ export interface PageProps {
      */
     rootId?: string;
 }/**
- * Page component - renders a full HTML page with React components server-side rendered to static HTML
+ * Page component - renders a full HTML page with optional client-side React SPA
  * 
- * The Page component compiles your React components into static HTML on the server in real-time.
- * This is pure server-side rendering (SSR) - the React components are rendered to HTML strings
- * and sent to the browser. No React runtime is loaded on the client unless you explicitly add it.
+ * The Page component can work in two modes:
+ * 1. **Static SSR** (default): Renders React components to static HTML (no client-side JS)
+ * 2. **SPA Mode** (spa=true): Bundles your component and renders it client-side with full interactivity
  * 
  * @example
- * <Route
- *   path="/dashboard"
- *   method="GET"
- *   onRequest={() => (
- *     <Page title="Dashboard">
- *       <div>
- *         <h1>Welcome to Dashboard</h1>
- *         <p>This is server-rendered HTML!</p>
- *       </div>
- *     </Page>
- *   )}
- * />
+ * // Static HTML only (fast, no JavaScript)
+ * <Page title="Static Page">
+ *   <div><h1>Hello</h1></div>
+ * </Page>
+ * 
+ * @example
+ * // Interactive SPA with client-side React (useState, useEffect work!)
+ * <Page title="Dashboard" spa={true}>
+ *   <Dashboard userId={params.id} />
+ * </Page>
  */
 export function Page(props: PageProps): null {
     // This component is not rendered; it's inspected by the server at runtime

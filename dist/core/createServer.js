@@ -3,6 +3,10 @@ import React from "react";
 import { renderToString } from "react-dom/server";
 import { collectRoutes } from "./collectRoutes";
 import { isResponseElement, isPageElement, resolveWithContext } from "./responseUtils";
+import { bundleComponentFile } from "./bundler";
+import { extractComponentInfo } from "./componentExtractor";
+// Store for component bundles served as static files
+const componentBundles = new Map();
 /**
  * Creates and starts a Fastify server from a React element tree
  *
@@ -26,6 +30,18 @@ export async function createServer(element) {
         }
     }
     console.log(`\n🚀 Registering ${routes.length} route(s)...\n`);
+    // Register route to serve bundled JavaScript files
+    fastify.get("/__bundles/:hash.js", async (request, reply) => {
+        const { hash } = request.params;
+        const bundle = componentBundles.get(hash);
+        if (!bundle) {
+            reply.code(404);
+            return { error: "Bundle not found" };
+        }
+        reply.header("Content-Type", "application/javascript; charset=utf-8");
+        reply.header("Cache-Control", "public, max-age=31536000, immutable");
+        return reply.send(bundle);
+    });
     // Register routes with Fastify
     for (const route of routes) {
         const method = route.method.toLowerCase();
@@ -82,9 +98,38 @@ export async function createServer(element) {
                         const htmlAttributes = props.htmlAttributes ?? {};
                         const bodyAttributes = props.bodyAttributes ?? {};
                         const rootId = props.rootId ?? "root";
-                        // Render the React content to static HTML
+                        const isSPA = props.spa ?? false;
+                        // Handle client-side component bundling for SPA mode
+                        let clientBundleHash = null;
+                        let clientPropsScript = "";
+                        if (isSPA && props.children && React.isValidElement(props.children)) {
+                            // Auto-detect and bundle the component
+                            const componentInfo = extractComponentInfo(props.children);
+                            if (componentInfo.filePath) {
+                                try {
+                                    fastify.log.info(`Bundling SPA component: ${componentInfo.componentName} from ${componentInfo.filePath}`);
+                                    const bundle = await bundleComponentFile(componentInfo.filePath);
+                                    clientBundleHash = bundle.hash;
+                                    // Store the bundle so we can serve it
+                                    componentBundles.set(clientBundleHash, bundle.code);
+                                    // Serialize the component props for the client
+                                    const serializedProps = JSON.stringify(componentInfo.props);
+                                    clientPropsScript = `<script>window.__INITIAL_PROPS__ = ${serializedProps};</script>`;
+                                }
+                                catch (error) {
+                                    fastify.log.error({ error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined }, `Error bundling SPA component from ${componentInfo.filePath}`);
+                                    // Continue without client bundle
+                                }
+                            }
+                            else {
+                                fastify.log.warn(`SPA mode enabled but could not detect component file path for: ${componentInfo.componentName}`);
+                            }
+                        }
+                        // For client-side SPAs, don't render server-side - just provide empty shell
+                        // For static pages, render server-side
                         let contentHtml = "";
-                        if (props.children) {
+                        if (!isSPA && props.children) {
+                            // Static server-side rendering only
                             try {
                                 contentHtml = renderToString(props.children);
                             }
@@ -93,6 +138,7 @@ export async function createServer(element) {
                                 contentHtml = `<div>Error rendering content: ${error instanceof Error ? error.message : String(error)}</div>`;
                             }
                         }
+                        // If SPA mode, contentHtml stays empty - pure client-side rendering
                         // Helper to escape HTML
                         const escapeHtml = (text) => {
                             const map = {
@@ -153,7 +199,7 @@ export async function createServer(element) {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${escapeHtml(title)}</title>${metaTags ? "\n    " + metaTags : ""}${linkTags ? "\n    " + linkTags : ""}${styles ? `\n    <style>${styles}</style>` : ""}${scriptTags ? "\n    " + scriptTags : ""}
+    <title>${escapeHtml(title)}</title>${metaTags ? "\n    " + metaTags : ""}${linkTags ? "\n    " + linkTags : ""}${styles ? `\n    <style>${styles}</style>` : ""}${clientPropsScript ? "\n    " + clientPropsScript : ""}${scriptTags ? "\n    " + scriptTags : ""}${clientBundleHash ? `\n    <script type="module" src="/__bundles/${clientBundleHash}.js"></script>` : ""}
   </head>
   <body${bodyAttrsString ? " " + bodyAttrsString : ""}>
     <div id="${escapeHtml(rootId)}">${contentHtml}</div>
