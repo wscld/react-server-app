@@ -254,18 +254,6 @@ Check out the [demo application](./examples/demo) for a complete working example
 - TypeScript types
 - "use spa" directive usage
 
-## 🗺️ Roadmap
-
-- [x] ~~Hot reload in development mode~~
-- [x] ~~Guards and Middleware support~~
-- [x] ~~"use spa" directive for auto-discovery~~
-- [x] ~~Modular bundler architecture~~
-- [ ] Schema validation with Zod/TypeBox integration
-- [ ] WebSocket support via `<WebSocket>` component
-- [ ] Plugin system for extending functionality
-- [ ] CLI tool for scaffolding projects
-- [ ] React reconciler for advanced use cases
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
