@@ -168,6 +168,29 @@ import Dashboard from "./pages/Dashboard";
 
 > **Note:** SPA mode requires `vite` and `@vitejs/plugin-react` to be installed. When using Node.js, the framework automatically falls back to Vite. With Bun runtime, you can use either Bun's built-in bundler or Vite.
 
+**Component Detection:**
+
+The framework automatically detects component file paths when using **Bun** or **tsx/ts-node**. When using plain Node.js in production, you need to register your components:
+
+```tsx
+import { registerComponent } from "react-server-app";
+import Dashboard from "./pages/Dashboard";
+
+// Register the component with its file path
+registerComponent(Dashboard, "./pages/Dashboard.tsx");
+
+// Now it will work in routes
+<Route
+  path="/dashboard"
+  method="GET"
+  onRequest={() => (
+    <Page spa={true}>
+      <Dashboard />
+    </Page>
+  )}
+/>;
+```
+
 **Configure Bundler:**
 
 ```tsx

@@ -6,10 +6,19 @@ const componentRegistry = new Map<Function, string>();
 
 /**
  * Register a component with its file path
- * This is optional - most users won't need this as require.cache works automatically
+ * Use this in production when using Node.js (not tsx/Bun)
+ *
+ * @example
+ * ```ts
+ * import { registerComponent } from 'react-server-app';
+ * import LandingPage from './pages/LandingPage';
+ *
+ * registerComponent(LandingPage, './pages/LandingPage.tsx');
+ * ```
  */
 export function registerComponent(component: Function, filePath: string) {
-  componentRegistry.set(component, filePath);
+  const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+  componentRegistry.set(component, absolutePath);
 }
 
 /**
@@ -84,7 +93,10 @@ export function extractComponentInfo(element: React.ReactElement): {
   }
 
   console.log(`[componentExtractor] Could not find file path for component: ${componentName}`);
-  console.log(`[componentExtractor] Tip: Make sure you're using Bun, or tsx/ts-node with Node.js`);
+  console.log(`[componentExtractor] When using Node.js in production, register your component:`);
+  console.log(`[componentExtractor]   import { registerComponent } from 'react-server-app';`);
+  console.log(`[componentExtractor]   registerComponent(${componentName}, './path/to/${componentName}.tsx');`);
+  console.log(`[componentExtractor] Or use Bun/tsx which auto-detect components.`);
 
   return {
     filePath,
