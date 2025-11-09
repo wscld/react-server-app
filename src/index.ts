@@ -13,6 +13,8 @@ export { createServer } from "./core/createServer";
 export { collectRoutes } from "./core/collectRoutes";
 export { configure, getConfig } from "./config";
 export { registerComponent } from "./core/componentExtractor";
+export { watchComponentFile, stopWatching } from "./core/hotReload";
+export { initializeSpaComponentRegistry, hasSpaDirective } from "./core/spaDirective";
 
 // Types
 export type {

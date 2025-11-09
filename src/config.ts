@@ -28,6 +28,18 @@ export interface ReactServerAppConfig {
    * @default true
    */
   cache?: boolean;
+
+  /**
+   * Directories to scan for "use spa" components
+   * @default ['src', 'app', 'pages', 'components']
+   */
+  spaComponentDirs?: string[];
+
+  /**
+   * Patterns to exclude when scanning for "use spa" components
+   * @default ['node_modules', 'dist', 'build', '.next', '.git']
+   */
+  spaComponentExclude?: string[];
 }
 
 let currentConfig: ReactServerAppConfig = {
@@ -36,6 +48,8 @@ let currentConfig: ReactServerAppConfig = {
   minify: process.env.NODE_ENV === "production",
   sourcemap: process.env.NODE_ENV === "development",
   cache: true,
+  spaComponentDirs: ["src", "app", "pages", "components"],
+  spaComponentExclude: ["node_modules", "dist", "build", ".next", ".git"],
 };
 
 /**

@@ -5,7 +5,10 @@ import type { AppProps, RouteContext } from "../types";
 import { collectRoutes } from "./collectRoutes";
 import { isResponseElement, isPageElement, resolveWithContext } from "./responseUtils";
 import { bundleComponentFile } from "./bundler";
-import { extractComponentInfo, isClientComponent } from "./componentExtractor";
+import { extractComponentInfo, isClientComponent, setSpaComponentRegistry } from "./componentExtractor";
+import { watchComponentFile } from "./hotReload";
+import { initializeSpaComponentRegistry } from "./spaDirective";
+import { getConfig } from "../config";
 import * as crypto from "crypto";
 
 // Store for component bundles served as static files
@@ -25,6 +28,14 @@ export async function createServer(element: React.ReactElement): Promise<Fastify
   const host = props.host ?? "0.0.0.0";
   const staticDir = props.staticDir;
   const staticPrefix = props.staticPrefix ?? "/";
+
+  // Initialize SPA component registry at startup
+  const config = getConfig();
+  const spaRegistry = initializeSpaComponentRegistry(undefined, {
+    include: config.spaComponentDirs,
+    exclude: config.spaComponentExclude,
+  });
+  setSpaComponentRegistry(spaRegistry);
 
   // Create Fastify instance
   const fastify = Fastify({
@@ -68,7 +79,16 @@ export async function createServer(element: React.ReactElement): Promise<Fastify
     }
 
     reply.header("Content-Type", "application/javascript; charset=utf-8");
-    reply.header("Cache-Control", "public, max-age=31536000, immutable");
+
+    // In development, use no-cache; in production use immutable
+    if (process.env.NODE_ENV === "development") {
+      reply.header("Cache-Control", "no-cache, no-store, must-revalidate");
+      reply.header("Pragma", "no-cache");
+      reply.header("Expires", "0");
+    } else {
+      reply.header("Cache-Control", "public, max-age=31536000, immutable");
+    }
+
     return reply.send(bundle);
   });
 
@@ -83,7 +103,16 @@ export async function createServer(element: React.ReactElement): Promise<Fastify
     }
 
     reply.header("Content-Type", "application/javascript; charset=utf-8");
-    reply.header("Cache-Control", "public, max-age=31536000, immutable");
+
+    // In development, use no-cache; in production use immutable
+    if (process.env.NODE_ENV === "development") {
+      reply.header("Cache-Control", "no-cache, no-store, must-revalidate");
+      reply.header("Pragma", "no-cache");
+      reply.header("Expires", "0");
+    } else {
+      reply.header("Cache-Control", "public, max-age=31536000, immutable");
+    }
+
     return reply.send(script);
   });
 
@@ -162,6 +191,19 @@ export async function createServer(element: React.ReactElement): Promise<Fastify
 
               if (componentInfo.filePath) {
                 try {
+                  // Watch file in development mode for hot reload
+                  if (process.env.NODE_ENV === "development") {
+                    watchComponentFile(componentInfo.filePath, () => {
+                      // On file change, remove old bundles from cache
+                      // The next request will trigger a fresh bundle
+                      const oldHash = clientBundleHash;
+                      if (oldHash) {
+                        componentBundles.delete(oldHash);
+                        fastify.log.info(`Cleared bundle cache for: ${componentInfo.filePath}`);
+                      }
+                    });
+                  }
+
                   fastify.log.info(`Bundling SPA component: ${componentInfo.componentName} from ${componentInfo.filePath}`);
                   const bundle = await bundleComponentFile(componentInfo.filePath);
                   clientBundleHash = bundle.hash;

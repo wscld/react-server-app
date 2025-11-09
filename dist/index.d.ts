@@ -302,6 +302,16 @@ interface ReactServerAppConfig {
      * @default true
      */
     cache?: boolean;
+    /**
+     * Directories to scan for "use spa" components
+     * @default ['src', 'app', 'pages', 'components']
+     */
+    spaComponentDirs?: string[];
+    /**
+     * Patterns to exclude when scanning for "use spa" components
+     * @default ['node_modules', 'dist', 'build', '.next', '.git']
+     */
+    spaComponentExclude?: string[];
 }
 /**
  * Configure the React Server App framework
@@ -313,9 +323,39 @@ declare function configure(config: ReactServerAppConfig): void;
 declare function getConfig(): ReactServerAppConfig;
 
 /**
- * Register a component with its file path
- * This is optional - most users won't need this as require.cache works automatically
+ * Register a component with its file path manually (fallback method)
+ *
+ * @deprecated Prefer using "use spa" directive at the top of your component file
+ *
+ * @example
+ * ```ts
+ * import { registerComponent } from 'react-server-app';
+ * import LandingPage from './pages/LandingPage';
+ *
+ * registerComponent(LandingPage, './pages/LandingPage.tsx');
+ * ```
  */
 declare function registerComponent(component: Function, filePath: string): void;
 
-export { App, type AppProps, type CollectedRoute, Controller, type ControllerProps, Guard, type Guard$1 as GuardFunction, type HTTPMethod, Middleware, type Middleware$1 as MiddlewareFunction, Page, type PageProps, type ReactServerAppConfig, Response, Route, type RouteContext, type RouteHandler, type RouteProps, collectRoutes, configure, createServer, getConfig, registerComponent, useContext as useRequestContext };
+/**
+ * Watch a component file for changes and clear cache when it changes
+ */
+declare function watchComponentFile(filePath: string, onReload?: () => void): void;
+/**
+ * Stop watching all files
+ */
+declare function stopWatching(): void;
+
+/**
+ * Check if a file has the "use spa" directive
+ */
+declare function hasSpaDirective(filePath: string): boolean;
+/**
+ * Initialize SPA component registry at server startup
+ */
+declare function initializeSpaComponentRegistry(rootDir?: string, options?: {
+    include?: string[];
+    exclude?: string[];
+}): Map<string, string>;
+
+export { App, type AppProps, type CollectedRoute, Controller, type ControllerProps, Guard, type Guard$1 as GuardFunction, type HTTPMethod, Middleware, type Middleware$1 as MiddlewareFunction, Page, type PageProps, type ReactServerAppConfig, Response, Route, type RouteContext, type RouteHandler, type RouteProps, collectRoutes, configure, createServer, getConfig, hasSpaDirective, initializeSpaComponentRegistry, registerComponent, stopWatching, useContext as useRequestContext, watchComponentFile };

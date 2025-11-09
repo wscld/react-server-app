@@ -1,6 +1,6 @@
 {
   "name": "react-server-app",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "A React-based server framework where API routes are defined using JSX",
   "type": "module",
   "main": "dist/index.js",

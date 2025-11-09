@@ -2,8 +2,8 @@ import React6 from 'react';
 import Fastify from 'fastify';
 import { renderToString } from 'react-dom/server';
 import * as crypto from 'crypto';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs2 from 'fs';
+import * as path2 from 'path';
 
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
@@ -172,7 +172,9 @@ var currentConfig = {
   bundleOutputDir: ".react-server-app/bundles",
   minify: process.env.NODE_ENV === "production",
   sourcemap: process.env.NODE_ENV === "development",
-  cache: true
+  cache: true,
+  spaComponentDirs: ["src", "app", "pages", "components"],
+  spaComponentExclude: ["node_modules", "dist", "build", ".next", ".git"]
 };
 function configure(config) {
   currentConfig = { ...currentConfig, ...config };
@@ -180,179 +182,194 @@ function configure(config) {
 function getConfig() {
   return { ...currentConfig };
 }
+var BunBundler = class {
+  async bundle(filePath, options) {
+    const config = getConfig();
+    const absolutePath = path2.isAbsolute(filePath) ? filePath : path2.resolve(process.cwd(), filePath);
+    if (!fs2.existsSync(absolutePath)) {
+      throw new Error(`Component file not found: ${absolutePath}`);
+    }
+    const fileContent = fs2.readFileSync(absolutePath, "utf-8");
+    const hash = crypto.createHash("md5").update(absolutePath + fileContent).digest("hex");
+    const componentDir = path2.dirname(absolutePath);
+    const entryFile = path2.join(componentDir, `.entry-${hash}.tsx`);
+    const componentName = path2.basename(absolutePath, path2.extname(absolutePath));
+    const componentExt = path2.extname(absolutePath);
+    const clientCode = `
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import ${componentName} from './${componentName}${componentExt}';
+
+// Get initial props from window if they exist
+const initialProps = (window as any).__INITIAL_PROPS__ || {};
+
+// Render the app on the client
+const root = document.getElementById('root');
+if (root) {
+  createRoot(root).render(React.createElement(${componentName}, initialProps));
+}
+`;
+    fs2.writeFileSync(entryFile, clientCode);
+    try {
+      const build = await Bun.build({
+        entrypoints: [entryFile],
+        minify: options?.minify ?? config.minify,
+        sourcemap: options?.sourcemap ?? config.sourcemap ? "inline" : "none",
+        target: "browser"
+      });
+      if (!build.success) {
+        const errorMessages = build.logs.map((l) => {
+          if (typeof l === "object" && "message" in l) {
+            return l.message;
+          }
+          return String(l);
+        }).join("\n");
+        throw new Error(`Failed to bundle component:
+${errorMessages || "Unknown bundling error"}`);
+      }
+      if (build.outputs.length === 0) {
+        throw new Error("No output from bundler");
+      }
+      const code = await build.outputs[0].text();
+      fs2.unlinkSync(entryFile);
+      return { code, hash };
+    } catch (error) {
+      try {
+        fs2.unlinkSync(entryFile);
+      } catch (e) {
+      }
+      throw error;
+    }
+  }
+};
+var ViteBundler = class {
+  async bundle(filePath, options) {
+    const config = getConfig();
+    const absolutePath = path2.isAbsolute(filePath) ? filePath : path2.resolve(process.cwd(), filePath);
+    if (!fs2.existsSync(absolutePath)) {
+      throw new Error(`Component file not found: ${absolutePath}`);
+    }
+    const fileContent = fs2.readFileSync(absolutePath, "utf-8");
+    const hash = crypto.createHash("md5").update(absolutePath + fileContent).digest("hex");
+    let vite;
+    try {
+      vite = await import('vite');
+    } catch (error) {
+      throw new Error("Vite is not installed. Please run: npm install vite @vitejs/plugin-react");
+    }
+    const componentDir = path2.dirname(absolutePath);
+    const entryFile = path2.join(componentDir, `.entry-${hash}.tsx`);
+    const outDir = path2.join(componentDir, `.vite-out-${hash}`);
+    const componentName = path2.basename(absolutePath, path2.extname(absolutePath));
+    const componentExt = path2.extname(absolutePath);
+    const clientCode = `
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import ${componentName} from './${componentName}${componentExt}';
+
+// Get initial props from window if they exist
+const initialProps = (window as any).__INITIAL_PROPS__ || {};
+
+// Render the app on the client
+const root = document.getElementById('root');
+if (root) {
+  createRoot(root).render(React.createElement(${componentName}, initialProps));
+}
+`;
+    fs2.writeFileSync(entryFile, clientCode);
+    try {
+      await vite.build({
+        configFile: false,
+        logLevel: "error",
+        // Minimize console output
+        define: {
+          "process.env.NODE_ENV": JSON.stringify(options?.minify ? "production" : "development")
+        },
+        build: {
+          outDir,
+          emptyOutDir: true,
+          minify: options?.minify ?? config.minify,
+          sourcemap: options?.sourcemap ?? config.sourcemap,
+          rollupOptions: {
+            input: entryFile,
+            output: {
+              format: "es",
+              entryFileNames: "bundle.js"
+            }
+          },
+          write: true,
+          target: "es2015"
+        },
+        plugins: [
+          // @ts-ignore - Vite plugin is an optional dependency
+          (await import('@vitejs/plugin-react')).default()
+        ]
+      });
+      const bundleFile = path2.join(outDir, "bundle.js");
+      if (!fs2.existsSync(bundleFile)) {
+        throw new Error("Vite build did not produce expected output");
+      }
+      const code = fs2.readFileSync(bundleFile, "utf-8");
+      try {
+        fs2.unlinkSync(entryFile);
+        fs2.rmSync(outDir, { recursive: true, force: true });
+      } catch (e) {
+      }
+      return { code, hash };
+    } catch (error) {
+      try {
+        fs2.unlinkSync(entryFile);
+        fs2.rmSync(outDir, { recursive: true, force: true });
+      } catch (e) {
+      }
+      throw error;
+    }
+  }
+};
 
 // src/core/bundler.ts
 var bundleCache = /* @__PURE__ */ new Map();
+var bunBundler = null;
+var viteBundler = null;
+function getBundler() {
+  const config = getConfig();
+  let bundlerType = config.bundler || "bun";
+  if (bundlerType === "bun" && typeof Bun === "undefined") {
+    console.log("[bundler] Bun not available, falling back to Vite");
+    bundlerType = "vite";
+  }
+  if (bundlerType === "vite") {
+    if (!viteBundler) {
+      viteBundler = new ViteBundler();
+    }
+    return viteBundler;
+  } else {
+    if (!bunBundler) {
+      bunBundler = new BunBundler();
+    }
+    return bunBundler;
+  }
+}
 async function bundleComponentFile(filePath, options) {
   const config = getConfig();
-  let bundler = config.bundler || "bun";
-  if (bundler === "bun" && typeof Bun === "undefined") {
-    console.log("[bundler] Bun not available, falling back to Vite");
-    bundler = "vite";
+  const bundler = getBundler();
+  const bundle = await bundler.bundle(filePath, options);
+  if (config.cache) {
+    bundleCache.set(bundle.hash, bundle);
   }
-  if (bundler === "vite") {
-    return bundleWithVite(filePath, options);
-  } else {
-    return bundleWithBun(filePath, options);
-  }
+  return bundle;
 }
-async function bundleWithBun(filePath, options) {
-  const config = getConfig();
-  const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
-  if (!fs.existsSync(absolutePath)) {
-    throw new Error(`Component file not found: ${absolutePath}`);
-  }
-  const fileContent = fs.readFileSync(absolutePath, "utf-8");
-  const hash = crypto.createHash("md5").update(absolutePath + fileContent).digest("hex");
-  if (config.cache && bundleCache.has(hash)) {
-    return bundleCache.get(hash);
-  }
-  const componentDir = path.dirname(absolutePath);
-  const entryFile = path.join(componentDir, `.entry-${hash}.tsx`);
-  const componentName = path.basename(absolutePath, path.extname(absolutePath));
-  const componentExt = path.extname(absolutePath);
-  const clientCode = `
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import ${componentName} from './${componentName}${componentExt}';
-
-// Get initial props from window if they exist
-const initialProps = (window as any).__INITIAL_PROPS__ || {};
-
-// Render the app on the client
-const root = document.getElementById('root');
-if (root) {
-  createRoot(root).render(React.createElement(${componentName}, initialProps));
-}
-`;
-  fs.writeFileSync(entryFile, clientCode);
-  try {
-    const build = await Bun.build({
-      entrypoints: [entryFile],
-      minify: options?.minify ?? config.minify,
-      sourcemap: options?.sourcemap ?? config.sourcemap ? "inline" : "none",
-      target: "browser"
-    });
-    if (!build.success) {
-      const errorMessages = build.logs.map((l) => {
-        if (typeof l === "object" && "message" in l) {
-          return l.message;
-        }
-        return String(l);
-      }).join("\n");
-      throw new Error(`Failed to bundle component:
-${errorMessages || "Unknown bundling error"}`);
-    }
-    if (build.outputs.length === 0) {
-      throw new Error("No output from bundler");
-    }
-    const code = await build.outputs[0].text();
-    const bundle = { code, hash };
-    if (config.cache) {
-      bundleCache.set(hash, bundle);
-    }
-    fs.unlinkSync(entryFile);
-    return bundle;
-  } catch (error) {
-    try {
-      fs.unlinkSync(entryFile);
-    } catch (e) {
-    }
-    throw error;
-  }
-}
-async function bundleWithVite(filePath, options) {
-  const config = getConfig();
-  const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
-  if (!fs.existsSync(absolutePath)) {
-    throw new Error(`Component file not found: ${absolutePath}`);
-  }
-  const fileContent = fs.readFileSync(absolutePath, "utf-8");
-  const hash = crypto.createHash("md5").update(absolutePath + fileContent).digest("hex");
-  if (config.cache && bundleCache.has(hash)) {
-    return bundleCache.get(hash);
-  }
-  let vite;
-  try {
-    vite = await import('vite');
-  } catch (error) {
-    throw new Error("Vite is not installed. Please run: npm install vite @vitejs/plugin-react");
-  }
-  const componentDir = path.dirname(absolutePath);
-  const entryFile = path.join(componentDir, `.entry-${hash}.tsx`);
-  const outDir = path.join(componentDir, `.vite-out-${hash}`);
-  const componentName = path.basename(absolutePath, path.extname(absolutePath));
-  const componentExt = path.extname(absolutePath);
-  const clientCode = `
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import ${componentName} from './${componentName}${componentExt}';
-
-// Get initial props from window if they exist
-const initialProps = (window as any).__INITIAL_PROPS__ || {};
-
-// Render the app on the client
-const root = document.getElementById('root');
-if (root) {
-  createRoot(root).render(React.createElement(${componentName}, initialProps));
-}
-`;
-  fs.writeFileSync(entryFile, clientCode);
-  try {
-    await vite.build({
-      configFile: false,
-      logLevel: "error",
-      // Minimize console output
-      define: {
-        "process.env.NODE_ENV": JSON.stringify(options?.minify ? "production" : "development")
-      },
-      build: {
-        outDir,
-        emptyOutDir: true,
-        minify: options?.minify ?? config.minify,
-        sourcemap: options?.sourcemap ?? config.sourcemap,
-        rollupOptions: {
-          input: entryFile,
-          output: {
-            format: "es",
-            entryFileNames: "bundle.js"
-          }
-        },
-        write: true,
-        target: "es2015"
-      },
-      plugins: [
-        // @ts-ignore - Vite plugin is an optional dependency
-        (await import('@vitejs/plugin-react')).default()
-      ]
-    });
-    const bundleFile = path.join(outDir, "bundle.js");
-    if (!fs.existsSync(bundleFile)) {
-      throw new Error("Vite build did not produce expected output");
-    }
-    const code = fs.readFileSync(bundleFile, "utf-8");
-    const bundle = { code, hash };
-    if (config.cache) {
-      bundleCache.set(hash, bundle);
-    }
-    try {
-      fs.unlinkSync(entryFile);
-      fs.rmSync(outDir, { recursive: true, force: true });
-    } catch (e) {
-    }
-    return bundle;
-  } catch (error) {
-    try {
-      fs.unlinkSync(entryFile);
-      fs.rmSync(outDir, { recursive: true, force: true });
-    } catch (e) {
-    }
-    throw error;
-  }
+function clearBundleCache() {
+  bundleCache.clear();
 }
 var componentRegistry = /* @__PURE__ */ new Map();
+var spaComponentRegistry = null;
+function setSpaComponentRegistry(registry) {
+  spaComponentRegistry = registry;
+}
 function registerComponent(component, filePath) {
-  componentRegistry.set(component, filePath);
+  const absolutePath = path2.isAbsolute(filePath) ? filePath : path2.resolve(process.cwd(), filePath);
+  componentRegistry.set(component, absolutePath);
 }
 function extractComponentInfo(element) {
   const component = element.type;
@@ -362,9 +379,14 @@ function extractComponentInfo(element) {
   const componentName = component.displayName || component.name || "Component";
   const props = element.props || {};
   let filePath = null;
+  if (spaComponentRegistry && spaComponentRegistry.has(componentName)) {
+    filePath = spaComponentRegistry.get(componentName);
+    console.log(`[componentExtractor] Found SPA component ${componentName} in registry: ${filePath}`);
+    return { filePath, props, componentName };
+  }
   if (componentRegistry.has(component)) {
     filePath = componentRegistry.get(component);
-    console.log(`[componentExtractor] Found component ${componentName} in registry: ${filePath}`);
+    console.log(`[componentExtractor] Found component ${componentName} in manual registry: ${filePath}`);
     return { filePath, props, componentName };
   }
   try {
@@ -372,7 +394,7 @@ function extractComponentInfo(element) {
       const requireCache = __require.cache;
       for (const [modulePath, moduleData] of Object.entries(requireCache)) {
         if (!moduleData || !moduleData.exports) continue;
-        if (modulePath.includes("node_modules") || !modulePath.includes(path.sep)) {
+        if (modulePath.includes("node_modules") || !modulePath.includes(path2.sep)) {
           continue;
         }
         const exports$1 = moduleData.exports;
@@ -396,12 +418,109 @@ function extractComponentInfo(element) {
     console.log(`[componentExtractor] require.cache not available:`, e.message);
   }
   console.log(`[componentExtractor] Could not find file path for component: ${componentName}`);
-  console.log(`[componentExtractor] Tip: Make sure you're using Bun, or tsx/ts-node with Node.js`);
+  console.log(`[componentExtractor] Add "use spa" directive to your component file:`);
+  console.log(`[componentExtractor]   // ${componentName}.tsx`);
+  console.log(`[componentExtractor]   "use spa";`);
+  console.log(`[componentExtractor]   `);
+  console.log(`[componentExtractor]   export default function ${componentName}() { ... }`);
   return {
     filePath,
     props,
     componentName
   };
+}
+var watchedFiles = /* @__PURE__ */ new Set();
+var fileWatchers = /* @__PURE__ */ new Map();
+function watchComponentFile(filePath, onReload) {
+  if (watchedFiles.has(filePath)) {
+    return;
+  }
+  watchedFiles.add(filePath);
+  const watcher = fs2.watch(filePath, (eventType) => {
+    if (eventType === "change") {
+      console.log(`[hotReload] File changed: ${filePath}`);
+      clearBundleCache();
+      onReload?.();
+    }
+  });
+  fileWatchers.set(filePath, watcher);
+}
+function stopWatching() {
+  for (const watcher of fileWatchers.values()) {
+    watcher.close();
+  }
+  fileWatchers.clear();
+  watchedFiles.clear();
+}
+function hasSpaDirective(filePath) {
+  try {
+    const content = fs2.readFileSync(filePath, "utf-8");
+    return /^['"]use spa['"];?\s*$/m.test(content);
+  } catch (e) {
+    return false;
+  }
+}
+function getExportedComponentName(filePath) {
+  try {
+    const content = fs2.readFileSync(filePath, "utf-8");
+    let match = content.match(/export\s+default\s+(?:function|const|class)\s+(\w+)/);
+    if (match) return match[1];
+    const defaultMatch = content.match(/export\s+default\s+(\w+)/);
+    if (defaultMatch) {
+      const componentName = defaultMatch[1];
+      if (content.includes(`const ${componentName}`) || content.includes(`function ${componentName}`)) {
+        return componentName;
+      }
+    }
+    match = content.match(/export\s+(?:function|const)\s+(\w+)/);
+    if (match) return match[1];
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+function discoverSpaComponents(rootDir, options = {}) {
+  const spaComponents = /* @__PURE__ */ new Map();
+  const include = options.include || ["src", "app", "pages", "components"];
+  const exclude = options.exclude || ["node_modules", "dist", "build", ".next", ".git"];
+  function scanDirectory(dir) {
+    if (!fs2.existsSync(dir)) return;
+    try {
+      const entries = fs2.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path2.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          const shouldExclude = exclude.some((pattern) => entry.name === pattern || entry.name.startsWith("."));
+          if (!shouldExclude) {
+            scanDirectory(fullPath);
+          }
+          continue;
+        }
+        if (entry.isFile() && /\.(tsx?|jsx?)$/.test(entry.name)) {
+          if (hasSpaDirective(fullPath)) {
+            const baseName = path2.basename(entry.name, path2.extname(entry.name));
+            const componentName = getExportedComponentName(fullPath) || baseName;
+            spaComponents.set(componentName, fullPath);
+            console.log(`[spaDirective] Discovered SPA component: ${componentName} \u2192 ${fullPath}`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(`[spaDirective] Failed to scan directory: ${dir}`, e);
+    }
+  }
+  for (const dir of include) {
+    const fullDir = path2.resolve(rootDir, dir);
+    scanDirectory(fullDir);
+  }
+  return spaComponents;
+}
+function initializeSpaComponentRegistry(rootDir, options) {
+  const workingDir = rootDir || process.cwd();
+  console.log('[spaDirective] Scanning for "use spa" components...');
+  const discovered = discoverSpaComponents(workingDir, options);
+  console.log(`[spaDirective] Found ${discovered.size} SPA component(s)`);
+  return discovered;
 }
 var componentBundles = /* @__PURE__ */ new Map();
 var propsScripts = /* @__PURE__ */ new Map();
@@ -411,6 +530,12 @@ async function createServer(element) {
   const host = props.host ?? "0.0.0.0";
   const staticDir = props.staticDir;
   const staticPrefix = props.staticPrefix ?? "/";
+  const config = getConfig();
+  const spaRegistry = initializeSpaComponentRegistry(void 0, {
+    include: config.spaComponentDirs,
+    exclude: config.spaComponentExclude
+  });
+  setSpaComponentRegistry(spaRegistry);
   const fastify = Fastify({
     logger: true
   });
@@ -444,7 +569,13 @@ async function createServer(element) {
       return { error: "Bundle not found" };
     }
     reply.header("Content-Type", "application/javascript; charset=utf-8");
-    reply.header("Cache-Control", "public, max-age=31536000, immutable");
+    if (process.env.NODE_ENV === "development") {
+      reply.header("Cache-Control", "no-cache, no-store, must-revalidate");
+      reply.header("Pragma", "no-cache");
+      reply.header("Expires", "0");
+    } else {
+      reply.header("Cache-Control", "public, max-age=31536000, immutable");
+    }
     return reply.send(bundle);
   });
   fastify.get("/__props/:hash.js", async (request, reply) => {
@@ -455,7 +586,13 @@ async function createServer(element) {
       return { error: "Props script not found" };
     }
     reply.header("Content-Type", "application/javascript; charset=utf-8");
-    reply.header("Cache-Control", "public, max-age=31536000, immutable");
+    if (process.env.NODE_ENV === "development") {
+      reply.header("Cache-Control", "no-cache, no-store, must-revalidate");
+      reply.header("Pragma", "no-cache");
+      reply.header("Expires", "0");
+    } else {
+      reply.header("Cache-Control", "public, max-age=31536000, immutable");
+    }
     return reply.send(script);
   });
   for (const route of routes) {
@@ -514,6 +651,15 @@ async function createServer(element) {
               const componentInfo = extractComponentInfo(props2.children);
               if (componentInfo.filePath) {
                 try {
+                  if (process.env.NODE_ENV === "development") {
+                    watchComponentFile(componentInfo.filePath, () => {
+                      const oldHash = clientBundleHash;
+                      if (oldHash) {
+                        componentBundles.delete(oldHash);
+                        fastify.log.info(`Cleared bundle cache for: ${componentInfo.filePath}`);
+                      }
+                    });
+                  }
                   fastify.log.info(`Bundling SPA component: ${componentInfo.componentName} from ${componentInfo.filePath}`);
                   const bundle = await bundleComponentFile(componentInfo.filePath);
                   clientBundleHash = bundle.hash;
@@ -632,6 +778,6 @@ async function createServer(element) {
   return fastify;
 }
 
-export { App, Controller, Guard, Middleware, Page, Response, Route, collectRoutes, configure, createServer, getConfig, registerComponent, useContext as useRequestContext };
+export { App, Controller, Guard, Middleware, Page, Response, Route, collectRoutes, configure, createServer, getConfig, hasSpaDirective, initializeSpaComponentRegistry, registerComponent, stopWatching, useContext as useRequestContext, watchComponentFile };
 //# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

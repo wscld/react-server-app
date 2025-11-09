@@ -1,12 +1,24 @@
 import React from "react";
 import * as path from "path";
 
-// Component registry for manual registration (optional)
+// Component registry for manual registration (fallback)
 const componentRegistry = new Map<Function, string>();
 
+// SPA component registry (auto-discovered via "use spa" directive)
+let spaComponentRegistry: Map<string, string> | null = null;
+
 /**
- * Register a component with its file path
- * Use this in production when using Node.js (not tsx/Bun)
+ * Set the SPA component registry (called during server initialization)
+ * @internal
+ */
+export function setSpaComponentRegistry(registry: Map<string, string>) {
+  spaComponentRegistry = registry;
+}
+
+/**
+ * Register a component with its file path manually (fallback method)
+ *
+ * @deprecated Prefer using "use spa" directive at the top of your component file
  *
  * @example
  * ```ts
@@ -44,14 +56,21 @@ export function extractComponentInfo(element: React.ReactElement): {
   // Try to extract file path from the component function
   let filePath: string | null = null;
 
-  // First check the component registry (for manual registration)
-  if (componentRegistry.has(component)) {
-    filePath = componentRegistry.get(component)!;
-    console.log(`[componentExtractor] Found component ${componentName} in registry: ${filePath}`);
+  // 1. Check SPA component registry (auto-discovered via "use spa" directive)
+  if (spaComponentRegistry && spaComponentRegistry.has(componentName)) {
+    filePath = spaComponentRegistry.get(componentName)!;
+    console.log(`[componentExtractor] Found SPA component ${componentName} in registry: ${filePath}`);
     return { filePath, props, componentName };
   }
 
-  // Try to get from require.cache (works in Bun and Node.js)
+  // 2. Check manual component registry (fallback)
+  if (componentRegistry.has(component)) {
+    filePath = componentRegistry.get(component)!;
+    console.log(`[componentExtractor] Found component ${componentName} in manual registry: ${filePath}`);
+    return { filePath, props, componentName };
+  }
+
+  // 3. Try to get from require.cache (works in Bun and tsx)
   try {
     if (typeof require !== "undefined" && (require as any).cache) {
       const requireCache = (require as any).cache as Record<string, any>;
@@ -93,10 +112,11 @@ export function extractComponentInfo(element: React.ReactElement): {
   }
 
   console.log(`[componentExtractor] Could not find file path for component: ${componentName}`);
-  console.log(`[componentExtractor] When using Node.js in production, register your component:`);
-  console.log(`[componentExtractor]   import { registerComponent } from 'react-server-app';`);
-  console.log(`[componentExtractor]   registerComponent(${componentName}, './path/to/${componentName}.tsx');`);
-  console.log(`[componentExtractor] Or use Bun/tsx which auto-detect components.`);
+  console.log(`[componentExtractor] Add "use spa" directive to your component file:`);
+  console.log(`[componentExtractor]   // ${componentName}.tsx`);
+  console.log(`[componentExtractor]   "use spa";`);
+  console.log(`[componentExtractor]   `);
+  console.log(`[componentExtractor]   export default function ${componentName}() { ... }`);
 
   return {
     filePath,
