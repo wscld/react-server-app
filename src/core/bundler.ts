@@ -1,7 +1,6 @@
 import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
-import * as os from "os";
 import { getConfig } from "../config";
 
 // Cache for bundled components
@@ -56,12 +55,6 @@ async function bundleWithBun(filePath: string, options?: BundleOptions): Promise
     return bundleCache.get(hash)!;
   }
 
-  // Create temporary directory for build outputs (not the entry file)
-  const tmpDir = path.join(os.tmpdir(), "react-server-app-bundles");
-  if (!fs.existsSync(tmpDir)) {
-    fs.mkdirSync(tmpDir, { recursive: true });
-  }
-
   // Create entry file in the same directory as the component so module resolution works
   const componentDir = path.dirname(absolutePath);
   const entryFile = path.join(componentDir, `.entry-${hash}.tsx`);
@@ -87,38 +80,13 @@ if (root) {
   fs.writeFileSync(entryFile, clientCode);
 
   try {
-    console.log("Entry file created:", entryFile);
-    console.log("Entry file content:", clientCode);
-
-    // Use Bun's built-in bundler
-    console.log("Starting Bun.build with config:", {
+    // Use Bun's built-in bundler - output directly to memory
+    const build = await Bun.build({
       entrypoints: [entryFile],
-      outdir: tmpDir,
-      naming: { entry: `bundle-${hash}.js` },
+      minify: options?.minify ?? config.minify,
+      sourcemap: options?.sourcemap ?? config.sourcemap ? "inline" : "none",
       target: "browser",
     });
-
-    let build;
-    try {
-      build = await Bun.build({
-        entrypoints: [entryFile],
-        outdir: tmpDir,
-        naming: {
-          entry: `bundle-${hash}.js`,
-        },
-        minify: options?.minify ?? config.minify,
-        sourcemap: options?.sourcemap ?? config.sourcemap ? "inline" : "none",
-        target: "browser",
-        external: [], // Bundle all dependencies (don't mark anything as external)
-      });
-    } catch (buildError) {
-      console.error("Bun.build threw an error:", buildError);
-      throw new Error(`Bun.build failed: ${buildError instanceof Error ? buildError.message : String(buildError)}`);
-    }
-
-    console.log("Bun.build completed. Success:", build.success);
-    console.log("Build outputs:", build.outputs.length);
-    console.log("Build logs:", build.logs);
 
     if (!build.success) {
       const errorMessages = build.logs
@@ -129,7 +97,6 @@ if (root) {
           return String(l);
         })
         .join("\n");
-      console.error("Bundle errors:", build.logs);
       throw new Error(`Failed to bundle component:\n${errorMessages || "Unknown bundling error"}`);
     }
 
@@ -137,7 +104,7 @@ if (root) {
       throw new Error("No output from bundler");
     }
 
-    // Read the bundled code
+    // Read the bundled code directly from Bun's output (no file I/O)
     const code = await build.outputs[0].text();
     const bundle = { code, hash };
 
@@ -146,12 +113,8 @@ if (root) {
       bundleCache.set(hash, bundle);
     }
 
-    // Clean up temp files
-    try {
-      fs.unlinkSync(entryFile);
-    } catch (e) {
-      // Ignore cleanup errors
-    }
+    // Clean up entry file
+    fs.unlinkSync(entryFile);
 
     return bundle;
   } catch (error) {
@@ -198,16 +161,10 @@ async function bundleWithVite(filePath: string, options?: BundleOptions): Promis
     throw new Error("Vite is not installed. Please run: npm install vite @vitejs/plugin-react");
   }
 
-  // Create temporary directory for build outputs
-  const tmpDir = path.join(os.tmpdir(), "react-server-app-bundles");
-  if (!fs.existsSync(tmpDir)) {
-    fs.mkdirSync(tmpDir, { recursive: true });
-  }
-
   // Create entry file in the same directory as the component so module resolution works
   const componentDir = path.dirname(absolutePath);
   const entryFile = path.join(componentDir, `.entry-${hash}.tsx`);
-  const outDir = path.join(tmpDir, `out-${hash}`);
+  const outDir = path.join(componentDir, `.vite-out-${hash}`);
 
   // Create entry file that imports the component and sets up client-side rendering
   const componentName = path.basename(absolutePath, path.extname(absolutePath));
@@ -233,12 +190,13 @@ if (root) {
     // Build with Vite
     await vite.build({
       configFile: false,
+      logLevel: "error", // Minimize console output
       define: {
         "process.env.NODE_ENV": JSON.stringify(options?.minify ? "production" : "development"),
       },
       build: {
         outDir,
-        emptyOutDir: false, // Suppress warning about outDir being outside project root
+        emptyOutDir: true,
         minify: options?.minify ?? config.minify,
         sourcemap: options?.sourcemap ?? config.sourcemap,
         rollupOptions: {
@@ -255,7 +213,6 @@ if (root) {
         // @ts-ignore - Vite plugin is an optional dependency
         (await import("@vitejs/plugin-react")).default(),
       ],
-      logLevel: "warn", // Reduce Vite's console output
     });
 
     // Read the bundled code

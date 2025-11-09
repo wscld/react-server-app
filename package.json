@@ -39,10 +39,9 @@
   "homepage": "https://github.com/wscld/react-server-app#readme",
   "scripts": {
     "build": "tsup",
-    "build:types": "tsc --emitDeclarationOnly",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "prepublishOnly": "bun run clean && bun run build && bun run build:types"
+    "prepublishOnly": "bun run clean && bun run build"
   },
   "dependencies": {
     "@fastify/static": "^7.0.0",
