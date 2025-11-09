@@ -1,214 +1,165 @@
 # react-server-app
 
-> A React-based server framework where API routes are defined using JSX, similar to how react-pdf and react-email use JSX for non-UI rendering.
+> A React-based server framework where you define routes using JSX components, combining the power of React with Fastify's performance.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Fastify](https://img.shields.io/badge/Fastify-000000?logo=fastify&logoColor=white)](https://www.fastify.io/)
 [![Bun](https://img.shields.io/badge/Bun-000000?logo=bun&logoColor=white)](https://bun.sh/)
+[![npm version](https://img.shields.io/npm/v/react-server-app.svg)](https://www.npmjs.com/package/react-server-app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ✨ Features
 
-- 🎯 **JSX as Configuration** - Define routes declaratively with familiar React syntax
+- 🎯 **JSX as Configuration** - Define routes declaratively with React components
+- 🛡️ **Guards & Middleware** - Built-in support for authentication and request processing
 - 🔒 **TypeScript-First** - Full type safety with generic type parameters
-- ⚡ **Fastify Powered** - Fast, lightweight HTTP server under the hood
-- 🎨 **Nested Routes** - Support for route prefixes via `<Controller>`
-- � **Page Rendering** - SSR and SPA support with automatic bundling
-- ⚛️ **Full React SPA** - Build interactive pages with hooks, state, and effects
-- �🔄 **Bun & Node Compatible** - Works with both runtimes
+- ⚡ **Fastify Powered** - Blazing fast HTTP server under the hood
+- 🎨 **Nested Routes** - Organize routes with `<Controller>` components
+- 📄 **Page Rendering** - SSR and SPA support with automatic bundling
+- ⚛️ **Full React SPA** - Build interactive pages with hooks, state, and effects  
+- 🔄 **Hot Reload** - Development mode with automatic cache invalidation
+- 🎭 **"use spa" Directive** - Auto-discovery of SPA components at startup
+- 🚀 **Bun & Node Compatible** - Works with both runtimes seamlessly
 
 ## 📦 Installation
 
 ```bash
-# Basic installation
+# Using Bun (recommended)
 bun add react-server-app react react-dom
-# or
+
+# Using npm
 npm install react-server-app react react-dom
-```
 
-**For SPA mode (optional):**
-
-If you want to use the `<Page>` component with `spa={true}` for client-side React apps, you'll also need to install Vite:
-
-```bash
+# For SPA mode, also install:
 bun add vite @vitejs/plugin-react
 # or
 npm install vite @vitejs/plugin-react
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
 ```tsx
 import React from "react";
-import { App, Controller, Route, createServer } from "react-server-app";
+import { App, Route, createServer } from "react-server-app";
 
 const server = (
-  <App port={8080}>
-    <Controller path="/api">
-      <Route path="/users/:id" method="GET" onRequest={({ params }) => ({ id: params.id })} />
-    </Controller>
+  <App port={3000}>
+    <Route 
+      path="/hello" 
+      method="GET" 
+      onRequest={() => ({ message: "Hello World!" })} 
+    />
   </App>
 );
 
 createServer(server);
 ```
 
-## Components
-
-### `<App>`
-
-Root component that starts a Fastify server.
-
-**Props:**
-
-- `port?: number` - Port to listen on (default: 3000)
-- `host?: string` - Host to bind to (default: '0.0.0.0')
-- `children: ReactNode` - Child routes and controllers
-
-### `<Controller>`
-
-Groups routes under a common path prefix.
-
-**Props:**
-
-- `path: string` - Base path for all child routes
-- `children: ReactNode` - Child routes or nested controllers
-
-### `<Route>`
-
-Defines a single API endpoint.
-
-**Props:**
-
-- `path: string` - Route path (supports Fastify path parameters like `:id`)
-- `method: HTTPMethod | HTTPMethod[]` - HTTP method(s): GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD
-- `onRequest: RouteHandler` - Request handler function
-- `schema?: object` - Optional Fastify schema for validation
-
-**RouteHandler signature:**
-
-```typescript
-(context: { request: FastifyRequest; reply: FastifyReply; params: TParams; query: TQuery; body: TBody }) => TResponse | Promise<TResponse>;
+Run with:
+```bash
+bun run server.tsx
+# or
+tsx server.tsx
 ```
 
-### `<Page>`
+Visit http://localhost:3000/hello
 
-Renders a full HTML page with optional SPA (Single Page Application) support. When `spa={true}` is enabled, the framework automatically bundles your React component and delivers it as a client-side application with full interactivity.
+📚 **[See Full Quick Start Guide](./quick-start/README.md)**
 
-**Props:**
+## 📖 Documentation
 
-- `title?: string` - Page title (default: "React App")
-- `meta?: Array<object>` - Meta tags for SEO and social sharing
-- `links?: Array<object>` - Link tags for stylesheets, fonts, etc.
-- `scripts?: Array<object>` - External scripts to include
-- `styles?: string` - Inline CSS styles
-- `lang?: string` - HTML lang attribute (default: "en")
-- `doctype?: string` - Document type declaration
-- `htmlAttributes?: object` - Additional attributes for `<html>` tag
-- `bodyAttributes?: object` - Additional attributes for `<body>` tag
-- `rootId?: string` - ID for the root div (default: "root")
-- `spa?: boolean` - Enable SPA mode with automatic bundling (default: false)
-- `status?: number` - HTTP status code (default: 200)
-- `headers?: object` - Custom HTTP headers
-- `children?: ReactNode` - Page content (React component for SPA mode)
+- [Quick Start Guide](./quick-start/README.md) - Get started in 5 minutes
+- [API Components](./quick-start/01-COMPONENTS.md) - All available components
+- [Guards & Middleware](./quick-start/02-GUARDS-MIDDLEWARE.md) - Authentication and request processing
+- [SPA Pages](./quick-start/03-SPA-PAGES.md) - Build interactive pages
+- [Configuration](./quick-start/04-CONFIGURATION.md) - Framework configuration options
+- ["use spa" Directive](./docs/USE_SPA_DIRECTIVE.md) - Auto-discovery of SPA components
 
-**Basic SSR Example:**
+## 💡 Examples
+
+### Simple API Route
 
 ```tsx
+<Route 
+  path="/users/:id" 
+  method="GET" 
+  onRequest={({ params }) => ({ 
+    userId: params.id,
+    name: "John Doe"
+  })} 
+/>
+```
+
+### Nested Controllers
+
+```tsx
+<Controller path="/api">
+  <Controller path="/users">
+    <Route path="/" method="GET" onRequest={() => getAllUsers()} />
+    <Route path="/:id" method="GET" onRequest={({ params }) => getUser(params.id)} />
+    <Route path="/" method="POST" onRequest={({ body }) => createUser(body)} />
+  </Controller>
+</Controller>
+```
+
+### Protected Routes with Guards
+
+```tsx
+<Guard use={authGuard}>
+  <Route path="/dashboard" method="GET" onRequest={getDashboard} />
+  <Route path="/profile" method="GET" onRequest={getProfile} />
+</Guard>
+```
+
+### SPA Page with React Hooks
+
+```tsx
+// dashboard.tsx
+"use spa";
+
+import { useState } from "react";
+
+export default function Dashboard() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div>
+      <h1>Count: {count}</h1>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+
+// server.tsx
 <Route
-  path="/about"
+  path="/dashboard"
   method="GET"
   onRequest={() => (
-    <Page title="About Us" status={200}>
-      <div>
-        <h1>About Our Company</h1>
-        <p>Static server-rendered content</p>
-      </div>
+    <Page spa={true} title="Dashboard">
+      <Dashboard />
     </Page>
   )}
 />
 ```
 
-**SPA Mode Example:**
+## 🎯 Core Concepts
+
+### Components
+
+- **`<App>`** - Root component that starts the server
+- **`<Controller>`** - Groups routes under a common path
+- **`<Route>`** - Defines HTTP endpoints
+- **`<Guard>`** - Protects routes with authorization logic
+- **`<Middleware>`** - Processes requests before handlers
+- **`<Page>`** - Renders HTML pages (SSR or SPA)
+- **`<Response>`** - Declarative response formatting
+
+### TypeScript Support
+
+Full type safety with generic type parameters:
 
 ```tsx
-// pages/Dashboard.tsx
-export default function Dashboard({ userName }: { userName: string }) {
-  const [count, setCount] = React.useState(0);
-
-  return (
-    <div>
-      <h1>Welcome, {userName}!</h1>
-      <button onClick={() => setCount(count + 1)}>Clicked {count} times</button>
-    </div>
-  );
-}
-
-// routes.tsx
-import Dashboard from "./pages/Dashboard";
-
-<Route
-  path="/dashboard"
-  method="GET"
-  onRequest={({ query }) => (
-    <Page spa={true} title="Dashboard">
-      <Dashboard userName={query.name || "Guest"} />
-    </Page>
-  )}
-/>;
-```
-
-**How SPA Mode Works:**
-
-1. **Automatic Bundling** - The framework detects your component, bundles it with Vite (or Bun), and caches the result
-2. **Props Hydration** - Component props are serialized to a separate hashed JS file (`/__props/:hash.js`)
-3. **Client-Side Mounting** - The bundled component mounts on the client using `ReactDOM.createRoot()`
-4. **Full Interactivity** - `useState`, `useEffect`, event handlers, and all React features work as expected
-5. **Smart Caching** - Bundles and props are cached with MD5 hashes and served with immutable cache headers
-
-> **Note:** SPA mode requires `vite` and `@vitejs/plugin-react` to be installed. When using Node.js, the framework automatically falls back to Vite. With Bun runtime, you can use either Bun's built-in bundler or Vite.
-
-**Component Detection:**
-
-The framework automatically detects component file paths when using **Bun** or **tsx/ts-node**. When using plain Node.js in production, you need to register your components:
-
-```tsx
-import { registerComponent } from "react-server-app";
-import Dashboard from "./pages/Dashboard";
-
-// Register the component with its file path
-registerComponent(Dashboard, "./pages/Dashboard.tsx");
-
-// Now it will work in routes
-<Route
-  path="/dashboard"
-  method="GET"
-  onRequest={() => (
-    <Page spa={true}>
-      <Dashboard />
-    </Page>
-  )}
-/>;
-```
-
-**Configure Bundler:**
-
-```tsx
-import { configure } from "react-server-app";
-
-// Set bundler preference (vite or bun)
-configure({
-  bundler: "vite", // or "bun" (requires Bun runtime)
-  minify: true,
-  cache: true,
-});
-```
-
-## TypeScript Support
-
-The library provides full TypeScript support with generic type parameters:
-
-```typescript
 interface UserParams {
   id: string;
 }
@@ -216,43 +167,126 @@ interface UserParams {
 interface User {
   id: string;
   name: string;
+  email: string;
 }
 
-<Route<UserParams, never, never, { user: User }>
+<Route<UserParams, never, never, User>
   path="/users/:id"
   method="GET"
   onRequest={({ params }) => {
     // params.id is typed as string
-    return { user: { id: params.id, name: "John" } };
+    return {
+      id: params.id,
+      name: "John Doe",
+      email: "john@example.com"
+    };
   }}
-/>;
+/>
 ```
 
-## Features
+## 🔧 Configuration
 
-- ✅ TypeScript-first with inferred types
-- ✅ Fastify under the hood for performance
-- ✅ Declarative route definition with JSX
-- ✅ Support for nested path prefixes via `<Controller>`
-- ✅ Server-side rendering (SSR) with `<Page>` component
-- ✅ Single Page Application (SPA) mode with automatic bundling
-- ✅ React hooks support (useState, useEffect, etc.) in SPA mode
-- ✅ Automatic component detection and bundling (Vite/Bun)
-- ✅ Smart caching with MD5-hashed bundles
-- ✅ Works with Bun (default) and Node.js
-- ✅ No react-reconciler—just simple element traversal
+Configure the framework to your needs:
 
-## Roadmap
+```tsx
+import { configure } from "react-server-app";
 
+configure({
+  bundler: 'vite',        // or 'bun'
+  minify: true,           // Minify bundles
+  cache: true,            // Enable caching
+  spaComponentDirs: [     // Directories to scan for "use spa"
+    'pages',
+    'components'
+  ],
+  spaComponentExclude: [  // Directories to exclude
+    'node_modules',
+    'dist'
+  ]
+});
+```
+
+📖 **[Full Configuration Guide](./quick-start/04-CONFIGURATION.md)**
+
+## 🚀 Advanced Features
+
+### Hot Reload
+
+Development mode automatically watches your files and clears the cache when changes are detected. **No server restart needed!**
+
+```tsx
+// Just save your file and changes are reflected immediately
+```
+
+### "use spa" Directive
+
+Auto-discover SPA components at startup:
+
+```tsx
+// pages/Dashboard.tsx
+"use spa";
+
+export default function Dashboard() {
+  return <div>Auto-discovered!</div>;
+}
+```
+
+No registration needed - the framework finds it automatically.
+
+📖 **[Read the full guide](./docs/USE_SPA_DIRECTIVE.md)**
+
+### Modular Bundler System
+
+Supports multiple bundlers with a clean plugin architecture:
+
+- **Bun Bundler** - Native Bun bundling (very fast)
+- **Vite Bundler** - Industry-standard bundler (Node.js compatible)
+
+Add your own bundler by implementing the `Bundler` interface!
+
+## 📚 Complete Example
+
+Check out the [demo application](./examples/demo) for a complete working example with:
+
+- Authentication guards
+- CORS middleware
+- API routes
+- Interactive SPA pages
+- TypeScript types
+- "use spa" directive usage
+
+## 🗺️ Roadmap
+
+- [x] ~~Hot reload in development mode~~
+- [x] ~~Guards and Middleware support~~
+- [x] ~~"use spa" directive for auto-discovery~~
+- [x] ~~Modular bundler architecture~~
 - [ ] Schema validation with Zod/TypeBox integration
 - [ ] WebSocket support via `<WebSocket>` component
 - [ ] Plugin system for extending functionality
-- [ ] Hot reload in development mode
-- [ ] React reconciler for advanced use cases
 - [ ] CLI tool for scaffolding projects
+- [ ] React reconciler for advanced use cases
 
-## Follow Me
+## 🤝 Contributing
 
-Follow me on X (Twitter) [@wescld](https://x.com/wescld) for updates and more projects!
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Built with ❤️ using React, Fastify, and Bun.
+## 📝 License
+
+MIT
+
+## 👤 Author
+
+**Wesley Caldas**
+
+- X (Twitter): [@wescld](https://x.com/wescld)
+- GitHub: [@wesleycaldas](https://github.com/wesleycaldas)
+
+## 🔗 Links
+
+- **npm**: [react-server-app](https://www.npmjs.com/package/react-server-app)
+- **Documentation**: [Quick Start Guide](./quick-start/README.md)
+
+---
+
+**Built with ❤️ using React, Fastify, and TypeScript**
