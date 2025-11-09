@@ -1,112 +1,15 @@
 import React from "react";
 import * as path from "path";
-import * as fs from "fs";
 
-// Component registry for manual registration
+// Component registry for manual registration (optional)
 const componentRegistry = new Map<Function, string>();
 
 /**
- * Register a component with its file path (useful for ES modules in Node.js)
+ * Register a component with its file path
+ * This is optional - most users won't need this as require.cache works automatically
  */
 export function registerComponent(component: Function, filePath: string) {
   componentRegistry.set(component, filePath);
-}
-
-/**
- * Try to extract file path from Error stack trace
- */
-function extractFilePathFromStack(component: Function, componentName: string): string | null {
-  try {
-    // Trigger component execution to get its stack trace
-    // Create a custom error inside the component's context
-    let capturedStack = "";
-
-    try {
-      // Try to call toString on the component to see its source
-      const funcStr = component.toString();
-
-      // Create an error from within a mock render
-      const mockElement = React.createElement(component as any, {});
-
-      // The stack trace from here won't help, we need a different approach
-    } catch (e) {
-      // Ignore
-    }
-
-    // Alternative: Look at where the component was imported from
-    // by examining all modules and finding files that might contain this component name
-    const searchDirs = [
-      process.cwd(),
-      path.join(process.cwd(), "src"),
-      path.join(process.cwd(), "pages"),
-      path.join(process.cwd(), "components"),
-      path.join(process.cwd(), "examples"),
-      path.join(process.cwd(), "demo"),
-      path.join(process.cwd(), "../"),
-    ];
-
-    // Recursively search for files with the component name
-    return searchForComponentRecursive(componentName, searchDirs);
-  } catch (e) {
-    // Ignore errors
-  }
-
-  return null;
-}
-
-/**
- * Recursively search for a component file
- */
-function searchForComponentRecursive(componentName: string, searchDirs: string[], maxDepth: number = 3): string | null {
-  const possibleExtensions = [".tsx", ".ts", ".jsx", ".js"];
-
-  for (const dir of searchDirs) {
-    if (!fs.existsSync(dir)) continue;
-
-    const result = searchDirectory(dir, componentName, possibleExtensions, 0, maxDepth);
-    if (result) return result;
-  }
-
-  return null;
-}
-
-/**
- * Search a directory recursively
- */
-function searchDirectory(dir: string, componentName: string, extensions: string[], depth: number, maxDepth: number): string | null {
-  if (depth > maxDepth) return null;
-
-  try {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-    // First check files in current directory
-    for (const entry of entries) {
-      if (entry.isFile()) {
-        const fileName = path.parse(entry.name).name;
-        if (fileName === componentName) {
-          for (const ext of extensions) {
-            if (entry.name.endsWith(ext)) {
-              const fullPath = path.join(dir, entry.name);
-              console.log(`[componentExtractor] Found component ${componentName} by recursive search in: ${fullPath}`);
-              return fullPath;
-            }
-          }
-        }
-      }
-    }
-
-    // Then recurse into subdirectories
-    for (const entry of entries) {
-      if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules" && entry.name !== "dist" && entry.name !== "build") {
-        const result = searchDirectory(path.join(dir, entry.name), componentName, extensions, depth + 1, maxDepth);
-        if (result) return result;
-      }
-    }
-  } catch (e) {
-    // Skip directories we can't read
-  }
-
-  return null;
 }
 
 /**
@@ -139,15 +42,11 @@ export function extractComponentInfo(element: React.ReactElement): {
     return { filePath, props, componentName };
   }
 
-  // Try to get from require.cache (works in Bun and Node.js CommonJS)
+  // Try to get from require.cache (works in Bun and Node.js)
   try {
-    let requireCache: Record<string, any> | undefined;
+    if (typeof require !== "undefined" && (require as any).cache) {
+      const requireCache = (require as any).cache as Record<string, any>;
 
-    if (typeof require !== "undefined") {
-      requireCache = (require as any).cache;
-    }
-
-    if (requireCache) {
       // Look through all cached modules
       for (const [modulePath, moduleData] of Object.entries(requireCache)) {
         if (!moduleData || !moduleData.exports) continue;
@@ -181,20 +80,11 @@ export function extractComponentInfo(element: React.ReactElement): {
     }
   } catch (e) {
     // Module cache not available
+    console.log(`[componentExtractor] require.cache not available:`, (e as Error).message);
   }
-
-  // Try stack trace approach (now uses recursive search)
-  filePath = extractFilePathFromStack(component, componentName);
-  if (filePath) {
-    console.log(`[componentExtractor] Found component ${componentName} via search: ${filePath}`);
-    return { filePath, props, componentName };
-  }
-
-  // The recursive search is already done in extractFilePathFromStack
-  // No need for additional search here
 
   console.log(`[componentExtractor] Could not find file path for component: ${componentName}`);
-  console.log(`[componentExtractor] Component type:`, typeof component);
+  console.log(`[componentExtractor] Tip: Make sure you're using Bun, or tsx/ts-node with Node.js`);
 
   return {
     filePath,

@@ -1,6 +1,7 @@
 import React from "react";
 /**
- * Register a component with its file path (useful for ES modules in Node.js)
+ * Register a component with its file path
+ * This is optional - most users won't need this as require.cache works automatically
  */
 export declare function registerComponent(component: Function, filePath: string): void;
 /**

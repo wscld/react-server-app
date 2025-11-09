@@ -391,65 +391,6 @@ var componentRegistry = /* @__PURE__ */ new Map();
 function registerComponent(component, filePath) {
   componentRegistry.set(component, filePath);
 }
-function extractFilePathFromStack(component, componentName) {
-  try {
-    let capturedStack = "";
-    try {
-      const funcStr = component.toString();
-      const mockElement = React6.createElement(component, {});
-    } catch (e) {
-    }
-    const searchDirs = [
-      process.cwd(),
-      path.join(process.cwd(), "src"),
-      path.join(process.cwd(), "pages"),
-      path.join(process.cwd(), "components"),
-      path.join(process.cwd(), "examples"),
-      path.join(process.cwd(), "demo"),
-      path.join(process.cwd(), "../")
-    ];
-    return searchForComponentRecursive(componentName, searchDirs);
-  } catch (e) {
-  }
-  return null;
-}
-function searchForComponentRecursive(componentName, searchDirs, maxDepth = 3) {
-  const possibleExtensions = [".tsx", ".ts", ".jsx", ".js"];
-  for (const dir of searchDirs) {
-    if (!fs.existsSync(dir)) continue;
-    const result = searchDirectory(dir, componentName, possibleExtensions, 0, maxDepth);
-    if (result) return result;
-  }
-  return null;
-}
-function searchDirectory(dir, componentName, extensions, depth, maxDepth) {
-  if (depth > maxDepth) return null;
-  try {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isFile()) {
-        const fileName = path.parse(entry.name).name;
-        if (fileName === componentName) {
-          for (const ext of extensions) {
-            if (entry.name.endsWith(ext)) {
-              const fullPath = path.join(dir, entry.name);
-              console.log(`[componentExtractor] Found component ${componentName} by recursive search in: ${fullPath}`);
-              return fullPath;
-            }
-          }
-        }
-      }
-    }
-    for (const entry of entries) {
-      if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules" && entry.name !== "dist" && entry.name !== "build") {
-        const result = searchDirectory(path.join(dir, entry.name), componentName, extensions, depth + 1, maxDepth);
-        if (result) return result;
-      }
-    }
-  } catch (e) {
-  }
-  return null;
-}
 function extractComponentInfo(element) {
   const component = element.type;
   if (typeof component !== "function") {
@@ -464,11 +405,8 @@ function extractComponentInfo(element) {
     return { filePath, props, componentName };
   }
   try {
-    let requireCache;
-    if (typeof __require !== "undefined") {
-      requireCache = __require.cache;
-    }
-    if (requireCache) {
+    if (typeof __require !== "undefined" && __require.cache) {
+      const requireCache = __require.cache;
       for (const [modulePath, moduleData] of Object.entries(requireCache)) {
         if (!moduleData || !moduleData.exports) continue;
         if (modulePath.includes("node_modules") || !modulePath.includes(path.sep)) {
@@ -492,14 +430,10 @@ function extractComponentInfo(element) {
       }
     }
   } catch (e) {
-  }
-  filePath = extractFilePathFromStack(component, componentName);
-  if (filePath) {
-    console.log(`[componentExtractor] Found component ${componentName} via search: ${filePath}`);
-    return { filePath, props, componentName };
+    console.log(`[componentExtractor] require.cache not available:`, e.message);
   }
   console.log(`[componentExtractor] Could not find file path for component: ${componentName}`);
-  console.log(`[componentExtractor] Component type:`, typeof component);
+  console.log(`[componentExtractor] Tip: Make sure you're using Bun, or tsx/ts-node with Node.js`);
   return {
     filePath,
     props,
