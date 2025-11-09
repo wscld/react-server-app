@@ -38,10 +38,11 @@
   },
   "homepage": "https://github.com/wscld/react-server-app#readme",
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
+    "build:types": "tsc --emitDeclarationOnly",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "prepublishOnly": "bun run clean && bun run build"
+    "prepublishOnly": "bun run clean && bun run build && bun run build:types"
   },
   "dependencies": {
     "@fastify/static": "^7.0.0",
@@ -56,6 +57,7 @@
     "esbuild": "^0.25.12",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "tsup": "^8.5.0",
     "typescript": "^5.5.2",
     "vite": "^7.2.2"
   },
