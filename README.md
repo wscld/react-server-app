@@ -17,7 +17,7 @@
 - ⚡ **Fastify Powered** - Blazing fast HTTP server under the hood
 - 🎨 **Nested Routes** - Organize routes with `<Controller>` components
 - 📄 **Page Rendering** - SSR and SPA support with automatic bundling
-- ⚛️ **Full React SPA** - Build interactive pages with hooks, state, and effects  
+- ⚛️ **Full React SPA** - Build interactive pages with hooks, state, and effects
 - 🔄 **Hot Reload** - Development mode with automatic cache invalidation
 - 🎭 **"use spa" Directive** - Auto-discovery of SPA components at startup
 - 🚀 **Bun & Node Compatible** - Works with both runtimes seamlessly
@@ -45,11 +45,7 @@ import { App, Route, createServer } from "react-server-app";
 
 const server = (
   <App port={3000}>
-    <Route 
-      path="/hello" 
-      method="GET" 
-      onRequest={() => ({ message: "Hello World!" })} 
-    />
+    <Route path="/hello" method="GET" onRequest={() => ({ message: "Hello World!" })} />
   </App>
 );
 
@@ -57,6 +53,7 @@ createServer(server);
 ```
 
 Run with:
+
 ```bash
 bun run server.tsx
 # or
@@ -81,13 +78,13 @@ Visit http://localhost:3000/hello
 ### Simple API Route
 
 ```tsx
-<Route 
-  path="/users/:id" 
-  method="GET" 
-  onRequest={({ params }) => ({ 
+<Route
+  path="/users/:id"
+  method="GET"
+  onRequest={({ params }) => ({
     userId: params.id,
-    name: "John Doe"
-  })} 
+    name: "John Doe",
+  })}
 />
 ```
 
@@ -122,7 +119,7 @@ import { useState } from "react";
 
 export default function Dashboard() {
   const [count, setCount] = useState(0);
-  
+
   return (
     <div>
       <h1>Count: {count}</h1>
@@ -140,7 +137,7 @@ export default function Dashboard() {
       <Dashboard />
     </Page>
   )}
-/>
+/>;
 ```
 
 ## 🎯 Core Concepts
@@ -178,10 +175,10 @@ interface User {
     return {
       id: params.id,
       name: "John Doe",
-      email: "john@example.com"
+      email: "john@example.com",
     };
   }}
-/>
+/>;
 ```
 
 ## 🔧 Configuration
@@ -192,17 +189,19 @@ Configure the framework to your needs:
 import { configure } from "react-server-app";
 
 configure({
-  bundler: 'vite',        // or 'bun'
-  minify: true,           // Minify bundles
-  cache: true,            // Enable caching
-  spaComponentDirs: [     // Directories to scan for "use spa"
-    'pages',
-    'components'
+  bundler: "vite", // or 'bun'
+  minify: true, // Minify bundles
+  cache: true, // Enable caching
+  spaComponentDirs: [
+    // Directories to scan for "use spa"
+    "pages",
+    "components",
   ],
-  spaComponentExclude: [  // Directories to exclude
-    'node_modules',
-    'dist'
-  ]
+  spaComponentExclude: [
+    // Directories to exclude
+    "node_modules",
+    "dist",
+  ],
 });
 ```
 
@@ -280,7 +279,7 @@ MIT
 **Wesley Caldas**
 
 - X (Twitter): [@wescld](https://x.com/wescld)
-- GitHub: [@wesleycaldas](https://github.com/wesleycaldas)
+- GitHub: [@wscld](https://github.com/wscld)
 
 ## 🔗 Links
 

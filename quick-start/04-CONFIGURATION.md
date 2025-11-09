@@ -25,16 +25,16 @@ import { configure } from "react-server-app";
 configure({
   // Server options
   port: 3000,
-  host: 'localhost',
-  
+  host: "localhost",
+
   // Bundler options
-  bundler: 'vite',
+  bundler: "vite",
   minify: true,
   cache: true,
-  
+
   // SPA component discovery
-  spaComponentDirs: ['pages', 'components'],
-  spaComponentExclude: ['node_modules', 'dist'],
+  spaComponentDirs: ["pages", "components"],
+  spaComponentExclude: ["node_modules", "dist"],
 });
 ```
 
@@ -64,8 +64,8 @@ createServer(server);
 ### Environment Variables
 
 ```tsx
-const PORT = parseInt(process.env.PORT || '3000', 10);
-const HOST = process.env.HOST || '0.0.0.0';
+const PORT = parseInt(process.env.PORT || "3000", 10);
+const HOST = process.env.HOST || "0.0.0.0";
 
 const server = (
   <App port={PORT} host={HOST}>
@@ -84,7 +84,7 @@ const server = (
 import { configure } from "react-server-app";
 
 configure({
-  bundler: 'vite', // or 'bun'
+  bundler: "vite", // or 'bun'
 });
 ```
 
@@ -96,6 +96,7 @@ configure({
 **Auto-Detection:**
 
 If not specified, the framework auto-detects:
+
 - **Bun runtime**: Uses Bun bundler by default
 - **Node.js runtime**: Uses Vite bundler (must be installed)
 
@@ -129,11 +130,13 @@ configure({
 **Cache Control Headers:**
 
 Development mode:
+
 ```
 Cache-Control: no-cache, no-store, must-revalidate
 ```
 
 Production mode:
+
 ```
 Cache-Control: public, max-age=31536000, immutable
 ```
@@ -148,8 +151,8 @@ Configure auto-discovery of components with the `"use spa"` directive.
 
 ```tsx
 configure({
-  spaComponentDirs: ['pages', 'components', 'app'],
-  spaComponentExclude: ['node_modules', 'dist', 'build'],
+  spaComponentDirs: ["pages", "components", "app"],
+  spaComponentExclude: ["node_modules", "dist", "build"],
 });
 ```
 
@@ -161,17 +164,14 @@ Array of directories to scan for `"use spa"` components.
 
 ```tsx
 configure({
-  spaComponentDirs: [
-    'src/pages',
-    'src/components',
-    'app/dashboard',
-  ],
+  spaComponentDirs: ["src/pages", "src/components", "app/dashboard"],
 });
 ```
 
 **Default:**
+
 ```tsx
-['src', 'app', 'pages', 'components']
+["src", "app", "pages", "components"];
 ```
 
 #### `spaComponentExclude`
@@ -180,20 +180,14 @@ Array of directories to exclude from scanning.
 
 ```tsx
 configure({
-  spaComponentExclude: [
-    'node_modules',
-    'dist',
-    'build',
-    '.next',
-    '.git',
-    'tests',
-  ],
+  spaComponentExclude: ["node_modules", "dist", "build", ".next", ".git", "tests"],
 });
 ```
 
 **Default:**
+
 ```tsx
-['node_modules', 'dist', 'build', '.next', '.git']
+["node_modules", "dist", "build", ".next", ".git"];
 ```
 
 ### Example Structure
@@ -243,7 +237,7 @@ Development mode automatically clears cache when files change (hot reload).
 import { clearBundleCache } from "react-server-app";
 
 // Clear cache for a specific component
-clearBundleCache('./pages/Dashboard.tsx');
+clearBundleCache("./pages/Dashboard.tsx");
 
 // Or clear all caches (useful for testing)
 clearBundleCache();
@@ -258,19 +252,15 @@ clearBundleCache();
 ```tsx
 import { configure } from "react-server-app";
 
-const isDev = process.env.NODE_ENV !== 'production';
+const isDev = process.env.NODE_ENV !== "production";
 
 configure({
-  bundler: 'vite',
-  minify: !isDev,          // No minification in dev
-  cache: true,             // Cache in all environments
+  bundler: "vite",
+  minify: !isDev, // No minification in dev
+  cache: true, // Cache in all environments
 });
 
-const server = (
-  <App port={isDev ? 3000 : 8080}>
-    {/* Routes */}
-  </App>
-);
+const server = <App port={isDev ? 3000 : 8080}>{/* Routes */}</App>;
 ```
 
 ### Production
@@ -280,10 +270,10 @@ const server = (
 import { configure } from "react-server-app";
 
 configure({
-  bundler: 'bun',           // Use Bun for speed
-  minify: true,             // Minify for smaller bundles
-  cache: true,              // Cache everything
-  spaComponentDirs: ['dist/pages', 'dist/components'],
+  bundler: "bun", // Use Bun for speed
+  minify: true, // Minify for smaller bundles
+  cache: true, // Cache everything
+  spaComponentDirs: ["dist/pages", "dist/components"],
 });
 ```
 
@@ -309,8 +299,8 @@ MINIFY=true
 import { configure } from "react-server-app";
 
 configure({
-  bundler: (process.env.BUNDLER as 'vite' | 'bun') || 'vite',
-  minify: process.env.MINIFY === 'true',
+  bundler: (process.env.BUNDLER as "vite" | "bun") || "vite",
+  minify: process.env.MINIFY === "true",
 });
 ```
 
@@ -375,11 +365,11 @@ import { App, Controller, Route, configure, createServer } from "react-server-ap
 
 // Development configuration
 configure({
-  bundler: 'vite',
+  bundler: "vite",
   minify: false,
   cache: true,
-  spaComponentDirs: ['pages', 'components'],
-  spaComponentExclude: ['node_modules', 'dist', 'tests'],
+  spaComponentDirs: ["pages", "components"],
+  spaComponentExclude: ["node_modules", "dist", "tests"],
 });
 
 const server = (
@@ -403,15 +393,15 @@ import { App, Controller, Route, configure, createServer } from "react-server-ap
 
 // Production configuration
 configure({
-  bundler: 'bun',
+  bundler: "bun",
   minify: true,
   cache: true,
-  spaComponentDirs: ['dist/pages', 'dist/components'],
-  spaComponentExclude: ['node_modules'],
+  spaComponentDirs: ["dist/pages", "dist/components"],
+  spaComponentExclude: ["node_modules"],
 });
 
-const PORT = parseInt(process.env.PORT || '8080', 10);
-const HOST = process.env.HOST || '0.0.0.0';
+const PORT = parseInt(process.env.PORT || "8080", 10);
+const HOST = process.env.HOST || "0.0.0.0";
 
 const server = (
   <App port={PORT} host={HOST}>
@@ -431,25 +421,23 @@ console.log(`Production server running on http://${HOST}:${PORT}`);
 // config.ts
 import { configure } from "react-server-app";
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
+const isDevelopment = process.env.NODE_ENV !== "production";
 
 export const appConfig = {
-  port: parseInt(process.env.PORT || (isDevelopment ? '3000' : '8080'), 10),
-  host: process.env.HOST || (isDevelopment ? 'localhost' : '0.0.0.0'),
+  port: parseInt(process.env.PORT || (isDevelopment ? "3000" : "8080"), 10),
+  host: process.env.HOST || (isDevelopment ? "localhost" : "0.0.0.0"),
 };
 
 configure({
-  bundler: process.env.BUNDLER as 'vite' | 'bun' || 'vite',
+  bundler: (process.env.BUNDLER as "vite" | "bun") || "vite",
   minify: !isDevelopment,
   cache: true,
-  spaComponentDirs: isDevelopment 
-    ? ['pages', 'components']
-    : ['dist/pages', 'dist/components'],
-  spaComponentExclude: ['node_modules', 'dist', 'build', 'tests'],
+  spaComponentDirs: isDevelopment ? ["pages", "components"] : ["dist/pages", "dist/components"],
+  spaComponentExclude: ["node_modules", "dist", "build", "tests"],
 });
 
 // server.tsx
-import { appConfig } from './config';
+import { appConfig } from "./config";
 
 const server = (
   <App port={appConfig.port} host={appConfig.host}>
@@ -463,40 +451,40 @@ const server = (
 ```typescript
 // config/base.ts
 export const baseConfig = {
-  spaComponentExclude: ['node_modules', 'dist', 'build'],
+  spaComponentExclude: ["node_modules", "dist", "build"],
   cache: true,
 };
 
 // config/development.ts
-import { baseConfig } from './base';
+import { baseConfig } from "./base";
 
 export const devConfig = {
   ...baseConfig,
-  bundler: 'vite' as const,
+  bundler: "vite" as const,
   minify: false,
-  spaComponentDirs: ['src/pages', 'src/components'],
+  spaComponentDirs: ["src/pages", "src/components"],
   port: 3000,
-  host: 'localhost',
+  host: "localhost",
 };
 
 // config/production.ts
-import { baseConfig } from './base';
+import { baseConfig } from "./base";
 
 export const prodConfig = {
   ...baseConfig,
-  bundler: 'bun' as const,
+  bundler: "bun" as const,
   minify: true,
-  spaComponentDirs: ['dist/pages', 'dist/components'],
+  spaComponentDirs: ["dist/pages", "dist/components"],
   port: 8080,
-  host: '0.0.0.0',
+  host: "0.0.0.0",
 };
 
 // server.ts
 import { configure } from "react-server-app";
-import { devConfig } from './config/development';
-import { prodConfig } from './config/production';
+import { devConfig } from "./config/development";
+import { prodConfig } from "./config/production";
 
-const isDev = process.env.NODE_ENV !== 'production';
+const isDev = process.env.NODE_ENV !== "production";
 const config = isDev ? devConfig : prodConfig;
 
 configure(config);
@@ -519,12 +507,12 @@ interface Config {
   // Server
   port?: number;
   host?: string;
-  
+
   // Bundler
-  bundler?: 'vite' | 'bun';
+  bundler?: "vite" | "bun";
   minify?: boolean;
   cache?: boolean;
-  
+
   // SPA Discovery
   spaComponentDirs?: string[];
   spaComponentExclude?: string[];

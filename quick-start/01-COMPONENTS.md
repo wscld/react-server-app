@@ -22,9 +22,9 @@ The root component that creates and starts a Fastify server.
 
 ```typescript
 interface AppProps {
-  port?: number;          // Port to listen on (default: 3000)
-  host?: string;          // Host to bind to (default: '0.0.0.0')
-  children: ReactNode;    // Child routes, controllers, guards, middleware
+  port?: number; // Port to listen on (default: 3000)
+  host?: string; // Host to bind to (default: '0.0.0.0')
+  children: ReactNode; // Child routes, controllers, guards, middleware
 }
 ```
 
@@ -58,7 +58,7 @@ Groups routes under a common path prefix. Supports nesting for hierarchical rout
 
 ```typescript
 interface ControllerProps {
-  path: string;        // Base path for all child routes
+  path: string; // Base path for all child routes
   children: ReactNode; // Child routes or nested controllers
 }
 ```
@@ -71,7 +71,7 @@ interface ControllerProps {
     <Route path="/" method="GET" onRequest={() => getAllUsers()} />
     <Route path="/:id" method="GET" onRequest={({ params }) => getUser(params.id)} />
   </Controller>
-  
+
   <Controller path="/posts">
     <Route path="/" method="GET" onRequest={() => getAllPosts()} />
   </Controller>
@@ -79,6 +79,7 @@ interface ControllerProps {
 ```
 
 This creates routes:
+
 - `GET /api/users/`
 - `GET /api/users/:id`
 - `GET /api/posts/`
@@ -99,13 +100,13 @@ Defines an HTTP endpoint.
 
 ```typescript
 interface RouteProps<TParams = any, TQuery = any, TBody = any, TResponse = any> {
-  path: string;                          // Route path (supports :param syntax)
-  method: HTTPMethod | HTTPMethod[];     // HTTP method(s)
+  path: string; // Route path (supports :param syntax)
+  method: HTTPMethod | HTTPMethod[]; // HTTP method(s)
   onRequest: RouteHandler<TParams, TQuery, TBody, TResponse>;
-  schema?: object;                       // Fastify validation schema (optional)
+  schema?: object; // Fastify validation schema (optional)
 }
 
-type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD';
+type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
 
 type RouteHandler<TParams, TQuery, TBody, TResponse> = (context: {
   request: FastifyRequest;
@@ -122,35 +123,27 @@ type RouteHandler<TParams, TQuery, TBody, TResponse> = (context: {
 #### Basic Route
 
 ```tsx
-<Route 
-  path="/hello" 
-  method="GET" 
-  onRequest={() => ({ message: "Hello World!" })} 
-/>
+<Route path="/hello" method="GET" onRequest={() => ({ message: "Hello World!" })} />
 ```
 
 #### Route with Parameters
 
 ```tsx
-<Route 
-  path="/users/:id" 
-  method="GET" 
-  onRequest={({ params }) => ({ userId: params.id })} 
-/>
+<Route path="/users/:id" method="GET" onRequest={({ params }) => ({ userId: params.id })} />
 ```
 
 #### Multiple Methods
 
 ```tsx
-<Route 
-  path="/resource" 
-  method={["GET", "POST"]} 
+<Route
+  path="/resource"
+  method={["GET", "POST"]}
   onRequest={({ request }) => {
     if (request.method === "GET") {
       return { action: "fetch" };
     }
     return { action: "create" };
-  }} 
+  }}
 />
 ```
 
@@ -175,10 +168,10 @@ interface User {
     return {
       id: params.id,
       name: "John Doe",
-      email: "john@example.com"
+      email: "john@example.com",
     };
   }}
-/>
+/>;
 ```
 
 #### With Validation Schema
@@ -189,13 +182,13 @@ interface User {
   method="POST"
   schema={{
     body: {
-      type: 'object',
-      required: ['name', 'email'],
+      type: "object",
+      required: ["name", "email"],
       properties: {
-        name: { type: 'string' },
-        email: { type: 'string', format: 'email' }
-      }
-    }
+        name: { type: "string" },
+        email: { type: "string", format: "email" },
+      },
+    },
   }}
   onRequest={({ body }) => {
     // body is validated before reaching here
@@ -222,22 +215,16 @@ Protects routes with authorization logic. Guards can authenticate, authorize, an
 ```typescript
 interface GuardProps {
   use: GuardFunction | GuardFunction[]; // Guard function(s)
-  children: ReactNode;                   // Protected routes
+  children: ReactNode; // Protected routes
 }
 
-type GuardFunction = (context: {
-  request: FastifyRequest;
-  reply: FastifyReply;
-  params: any;
-  query: any;
-  body: any;
-}) => GuardResult | Promise<GuardResult>;
+type GuardFunction = (context: { request: FastifyRequest; reply: FastifyReply; params: any; query: any; body: any }) => GuardResult | Promise<GuardResult>;
 
 interface GuardResult {
-  authorized: boolean;     // Whether access is granted
-  status?: number;         // HTTP status if not authorized (default: 403)
-  message?: string;        // Error message
-  [key: string]: any;      // Additional context to pass to routes
+  authorized: boolean; // Whether access is granted
+  status?: number; // HTTP status if not authorized (default: 403)
+  message?: string; // Error message
+  [key: string]: any; // Additional context to pass to routes
 }
 ```
 
@@ -248,63 +235,63 @@ interface GuardResult {
 ```tsx
 const authGuard = ({ request }) => {
   const token = request.headers.authorization?.replace("Bearer ", "");
-  
+
   if (!token) {
     return {
       authorized: false,
       status: 401,
-      message: "Missing authentication token"
+      message: "Missing authentication token",
     };
   }
-  
+
   // Validate token (simplified)
   if (token !== "valid-token") {
     return {
       authorized: false,
       status: 401,
-      message: "Invalid token"
+      message: "Invalid token",
     };
   }
-  
+
   // Add user to context
   return {
     authorized: true,
-    user: { id: "1", name: "John Doe" }
+    user: { id: "1", name: "John Doe" },
   };
 };
 
 <Guard use={authGuard}>
-  <Route 
-    path="/protected" 
-    method="GET" 
+  <Route
+    path="/protected"
+    method="GET"
     onRequest={(ctx) => ({
       message: "Protected data",
-      user: ctx.user // From guard
-    })} 
+      user: ctx.user, // From guard
+    })}
   />
-</Guard>
+</Guard>;
 ```
 
 #### Role-Based Authorization
 
 ```tsx
 const adminGuard = ({ request }) => {
-  const userRole = request.headers['x-user-role'];
-  
-  if (userRole !== 'admin') {
+  const userRole = request.headers["x-user-role"];
+
+  if (userRole !== "admin") {
     return {
       authorized: false,
       status: 403,
-      message: "Admin access required"
+      message: "Admin access required",
     };
   }
-  
+
   return { authorized: true };
 };
 
 <Guard use={adminGuard}>
   <Route path="/admin/users" method="DELETE" onRequest={deleteUser} />
-</Guard>
+</Guard>;
 ```
 
 #### Multiple Guards
@@ -322,7 +309,7 @@ const adminGuard = ({ request }) => {
 <Guard use={authGuard}>
   {/* All routes require authentication */}
   <Route path="/profile" method="GET" onRequest={getProfile} />
-  
+
   <Guard use={adminGuard}>
     {/* These routes require authentication AND admin role */}
     <Route path="/admin/settings" method="GET" onRequest={getSettings} />
@@ -376,22 +363,20 @@ const loggingMiddleware = ({ request }) => {
 
 <Middleware use={loggingMiddleware}>
   <Route path="/api/users" method="GET" onRequest={getUsers} />
-</Middleware>
+</Middleware>;
 ```
 
 #### CORS Middleware
 
 ```tsx
 const corsMiddleware = ({ reply }) => {
-  reply.header('Access-Control-Allow-Origin', '*');
-  reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  reply.header("Access-Control-Allow-Origin", "*");
+  reply.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
 };
 
 <Middleware use={corsMiddleware}>
-  <Controller path="/api">
-    {/* All API routes have CORS headers */}
-  </Controller>
-</Middleware>
+  <Controller path="/api">{/* All API routes have CORS headers */}</Controller>
+</Middleware>;
 ```
 
 #### Request ID Middleware
@@ -400,29 +385,27 @@ const corsMiddleware = ({ reply }) => {
 const requestIdMiddleware = ({ request }) => {
   const requestId = crypto.randomUUID();
   console.log(`[${requestId}] ${request.method} ${request.url}`);
-  
+
   // Add to context
   return { requestId };
 };
 
 <Middleware use={requestIdMiddleware}>
-  <Route 
-    path="/data" 
-    method="GET" 
+  <Route
+    path="/data"
+    method="GET"
     onRequest={(ctx) => ({
       data: "...",
-      requestId: ctx.requestId // From middleware
-    })} 
+      requestId: ctx.requestId, // From middleware
+    })}
   />
-</Middleware>
+</Middleware>;
 ```
 
 #### Multiple Middleware
 
 ```tsx
-<Middleware use={[loggingMiddleware, corsMiddleware, requestIdMiddleware]}>
-  {/* All middleware run in order */}
-</Middleware>
+<Middleware use={[loggingMiddleware, corsMiddleware, requestIdMiddleware]}>{/* All middleware run in order */}</Middleware>
 ```
 
 ### Notes
@@ -443,31 +426,34 @@ Renders full HTML pages with optional SPA (Single Page Application) support.
 
 ```typescript
 interface PageProps {
-  title?: string;              // Page title (default: "React App")
-  meta?: Array<{               // Meta tags
+  title?: string; // Page title (default: "React App")
+  meta?: Array<{
+    // Meta tags
     name?: string;
     property?: string;
     content: string;
   }>;
-  links?: Array<{              // Link tags (stylesheets, etc.)
+  links?: Array<{
+    // Link tags (stylesheets, etc.)
     rel: string;
     href: string;
     [key: string]: any;
   }>;
-  scripts?: Array<{            // External scripts
+  scripts?: Array<{
+    // External scripts
     src: string;
     [key: string]: any;
   }>;
-  styles?: string;             // Inline CSS
-  lang?: string;               // HTML lang attribute (default: "en")
-  doctype?: string;            // Doctype (default: HTML5)
-  htmlAttributes?: object;     // <html> attributes
-  bodyAttributes?: object;     // <body> attributes
-  rootId?: string;             // Root div ID (default: "root")
-  spa?: boolean;               // Enable SPA mode (default: false)
-  status?: number;             // HTTP status (default: 200)
-  headers?: object;            // Custom HTTP headers
-  children?: ReactNode;        // Page content
+  styles?: string; // Inline CSS
+  lang?: string; // HTML lang attribute (default: "en")
+  doctype?: string; // Doctype (default: HTML5)
+  htmlAttributes?: object; // <html> attributes
+  bodyAttributes?: object; // <body> attributes
+  rootId?: string; // Root div ID (default: "root")
+  spa?: boolean; // Enable SPA mode (default: false)
+  status?: number; // HTTP status (default: 200)
+  headers?: object; // Custom HTTP headers
+  children?: ReactNode; // Page content
 }
 ```
 
@@ -498,11 +484,9 @@ interface PageProps {
   meta={[
     { name: "description", content: "An amazing blog post" },
     { property: "og:title", content: "My Blog Post" },
-    { property: "og:image", content: "https://example.com/image.jpg" }
+    { property: "og:image", content: "https://example.com/image.jpg" },
   ]}
-  links={[
-    { rel: "stylesheet", href: "/styles.css" }
-  ]}
+  links={[{ rel: "stylesheet", href: "/styles.css" }]}
 >
   <article>
     <h1>Blog Post Title</h1>
@@ -521,7 +505,7 @@ import { useState } from "react";
 
 export default function Counter({ initialCount = 0 }: { initialCount?: number }) {
   const [count, setCount] = useState(initialCount);
-  
+
   return (
     <div>
       <h1>Count: {count}</h1>
@@ -540,7 +524,7 @@ export default function Counter({ initialCount = 0 }: { initialCount?: number })
       <Counter initialCount={parseInt(query.start || "0")} />
     </Page>
   )}
-/>
+/>;
 ```
 
 ### How SPA Mode Works
@@ -567,10 +551,10 @@ Declarative HTTP response formatting with custom status, headers, and body.
 
 ```typescript
 interface ResponseProps {
-  status?: number;        // HTTP status code (default: 200)
-  headers?: object;       // HTTP headers
-  body?: any;             // Response body (string, object, etc.)
-  children?: ReactNode;   // Alternative to body prop
+  status?: number; // HTTP status code (default: 200)
+  headers?: object; // HTTP headers
+  body?: any; // Response body (string, object, etc.)
+  children?: ReactNode; // Alternative to body prop
 }
 ```
 
@@ -579,13 +563,7 @@ interface ResponseProps {
 #### Custom Status Code
 
 ```tsx
-<Route
-  path="/not-found"
-  method="GET"
-  onRequest={() => (
-    <Response status={404} body={{ error: "Not Found" }} />
-  )}
-/>
+<Route path="/not-found" method="GET" onRequest={() => <Response status={404} body={{ error: "Not Found" }} />} />
 ```
 
 #### Custom Headers
@@ -594,8 +572,8 @@ interface ResponseProps {
 <Response
   status={201}
   headers={{
-    'Location': '/users/123',
-    'X-Custom-Header': 'value'
+    Location: "/users/123",
+    "X-Custom-Header": "value",
   }}
   body={{ created: true, id: "123" }}
 />
@@ -604,10 +582,7 @@ interface ResponseProps {
 #### HTML Response
 
 ```tsx
-<Response
-  status={200}
-  headers={{ 'Content-Type': 'text/html' }}
->
+<Response status={200} headers={{ "Content-Type": "text/html" }}>
   <html>
     <body>
       <h1>Custom HTML</h1>

@@ -19,7 +19,7 @@ Build fully interactive Single Page Applications (SPAs) with React using **react
 
 ## What is SPA Mode?
 
-SPA mode transforms your React components into fully interactive client-side applications. 
+SPA mode transforms your React components into fully interactive client-side applications.
 
 ### SSR Mode (Default)
 
@@ -68,7 +68,7 @@ Result: Interactive React application running in the browser.
 ✅ Client-side routing (single-page feel)  
 ✅ Complex UI state management  
 ✅ Data visualization (charts, graphs)  
-✅ Dashboards and admin panels  
+✅ Dashboards and admin panels
 
 ### Use SSR Mode For:
 
@@ -76,7 +76,7 @@ Result: Interactive React application running in the browser.
 ✅ Documentation  
 ✅ Blog posts  
 ✅ Landing pages  
-✅ SEO-critical pages  
+✅ SEO-critical pages
 
 ---
 
@@ -102,7 +102,7 @@ import { useState } from "react";
 
 export default function Counter() {
   const [count, setCount] = useState(0);
-  
+
   return (
     <div>
       <h1>Count: {count}</h1>
@@ -193,8 +193,8 @@ export default function Dashboard() {
 import { configure } from "react-server-app";
 
 configure({
-  spaComponentDirs: ['pages', 'components', 'app'],
-  spaComponentExclude: ['node_modules', 'dist', 'build']
+  spaComponentDirs: ["pages", "components", "app"],
+  spaComponentExclude: ["node_modules", "dist", "build"],
 });
 ```
 
@@ -214,7 +214,7 @@ Pass data from server to your SPA components.
   method="GET"
   onRequest={async ({ params }) => {
     const user = await getUserById(params.id);
-    
+
     return (
       <Page spa={true} title={`User: ${user.name}`}>
         <UserProfile user={user} />
@@ -263,19 +263,15 @@ import { useState } from "react";
 export default function TodoList() {
   const [todos, setTodos] = useState<string[]>([]);
   const [input, setInput] = useState("");
-  
+
   const addTodo = () => {
     setTodos([...todos, input]);
     setInput("");
   };
-  
+
   return (
     <div>
-      <input 
-        value={input} 
-        onChange={(e) => setInput(e.target.value)} 
-        placeholder="New todo"
-      />
+      <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="New todo" />
       <button onClick={addTodo}>Add</button>
       <ul>
         {todos.map((todo, i) => (
@@ -296,15 +292,15 @@ import { useState, useEffect } from "react";
 
 export default function Clock() {
   const [time, setTime] = useState(new Date());
-  
+
   useEffect(() => {
     const timer = setInterval(() => {
       setTime(new Date());
     }, 1000);
-    
+
     return () => clearInterval(timer);
   }, []);
-  
+
   return <div>Current time: {time.toLocaleTimeString()}</div>;
 }
 ```
@@ -318,13 +314,11 @@ import { useRef } from "react";
 
 export default function FocusInput() {
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   return (
     <div>
       <input ref={inputRef} />
-      <button onClick={() => inputRef.current?.focus()}>
-        Focus Input
-      </button>
+      <button onClick={() => inputRef.current?.focus()}>Focus Input</button>
     </div>
   );
 }
@@ -340,27 +334,27 @@ import { useState, useEffect } from "react";
 function useFetch<T>(url: string) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     fetch(url)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setData(data);
         setLoading(false);
       });
   }, [url]);
-  
+
   return { data, loading };
 }
 
 export default function UserList() {
-  const { data, loading } = useFetch<{ users: any[] }>('/api/users');
-  
+  const { data, loading } = useFetch<{ users: any[] }>("/api/users");
+
   if (loading) return <div>Loading...</div>;
-  
+
   return (
     <ul>
-      {data?.users.map(user => (
+      {data?.users.map((user) => (
         <li key={user.id}>{user.name}</li>
       ))}
     </ul>
@@ -379,11 +373,13 @@ export default function UserList() {
 
 export default function StyledComponent() {
   return (
-    <div style={{ 
-      padding: '20px', 
-      backgroundColor: '#f0f0f0',
-      borderRadius: '8px'
-    }}>
+    <div
+      style={{
+        padding: "20px",
+        backgroundColor: "#f0f0f0",
+        borderRadius: "8px",
+      }}
+    >
       Styled content
     </div>
   );
@@ -393,8 +389,8 @@ export default function StyledComponent() {
 ### CSS in Page
 
 ```tsx
-<Page 
-  spa={true} 
+<Page
+  spa={true}
   title="Styled App"
   styles={`
     body { 
@@ -415,13 +411,7 @@ export default function StyledComponent() {
 ### External Stylesheet
 
 ```tsx
-<Page
-  spa={true}
-  title="Styled App"
-  links={[
-    { rel: 'stylesheet', href: '/styles.css' }
-  ]}
->
+<Page spa={true} title="Styled App" links={[{ rel: "stylesheet", href: "/styles.css" }]}>
   <MyComponent />
 </Page>
 ```
@@ -460,9 +450,9 @@ The framework supports two bundlers:
 import { configure } from "react-server-app";
 
 configure({
-  bundler: 'vite', // or 'bun'
+  bundler: "vite", // or 'bun'
   minify: true,
-  cache: true
+  cache: true,
 });
 ```
 
@@ -478,11 +468,13 @@ configure({
 ### Cache Control
 
 Development mode:
+
 ```
 Cache-Control: no-cache, no-store, must-revalidate
 ```
 
 Production mode:
+
 ```
 Cache-Control: public, max-age=31536000, immutable
 ```
@@ -575,19 +567,19 @@ import { useState, useEffect } from "react";
 export default function DataView() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
-    fetch('/api/data')
-      .then(res => res.json())
-      .then(data => {
+    fetch("/api/data")
+      .then((res) => res.json())
+      .then((data) => {
         setData(data);
         setLoading(false);
       });
   }, []);
-  
+
   if (loading) return <div>Loading...</div>;
   if (!data) return <div>No data</div>;
-  
+
   return <div>{JSON.stringify(data)}</div>;
 }
 ```
@@ -612,32 +604,32 @@ interface Stats {
 
 export default function Dashboard({ initialStats }: { initialStats: Stats }) {
   const [stats, setStats] = useState(initialStats);
-  
+
   useEffect(() => {
     const interval = setInterval(async () => {
-      const res = await fetch('/api/stats');
+      const res = await fetch("/api/stats");
       const newStats = await res.json();
       setStats(newStats);
     }, 5000); // Update every 5 seconds
-    
+
     return () => clearInterval(interval);
   }, []);
-  
+
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ padding: "20px" }}>
       <h1>Dashboard</h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-        <div style={{ padding: '20px', background: '#f0f0f0', borderRadius: '8px' }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+        <div style={{ padding: "20px", background: "#f0f0f0", borderRadius: "8px" }}>
           <h2>Users</h2>
-          <p style={{ fontSize: '2em' }}>{stats.users}</p>
+          <p style={{ fontSize: "2em" }}>{stats.users}</p>
         </div>
-        <div style={{ padding: '20px', background: '#f0f0f0', borderRadius: '8px' }}>
+        <div style={{ padding: "20px", background: "#f0f0f0", borderRadius: "8px" }}>
           <h2>Posts</h2>
-          <p style={{ fontSize: '2em' }}>{stats.posts}</p>
+          <p style={{ fontSize: "2em" }}>{stats.posts}</p>
         </div>
-        <div style={{ padding: '20px', background: '#f0f0f0', borderRadius: '8px' }}>
+        <div style={{ padding: "20px", background: "#f0f0f0", borderRadius: "8px" }}>
           <h2>Revenue</h2>
-          <p style={{ fontSize: '2em' }}>${stats.revenue}</p>
+          <p style={{ fontSize: "2em" }}>${stats.revenue}</p>
         </div>
       </div>
     </div>
@@ -656,7 +648,7 @@ export default function Dashboard({ initialStats }: { initialStats: Stats }) {
       </Page>
     );
   }}
-/>
+/>;
 ```
 
 ### Form with Validation
@@ -670,69 +662,61 @@ export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
-  
+
   const validate = () => {
     const newErrors: string[] = [];
-    
-    if (!email.includes('@')) {
-      newErrors.push('Invalid email');
+
+    if (!email.includes("@")) {
+      newErrors.push("Invalid email");
     }
-    
+
     if (password.length < 8) {
-      newErrors.push('Password must be at least 8 characters');
+      newErrors.push("Password must be at least 8 characters");
     }
-    
+
     setErrors(newErrors);
     return newErrors.length === 0;
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validate()) return;
-    
-    const res = await fetch('/api/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+
+    const res = await fetch("/api/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
     });
-    
+
     if (res.ok) {
-      alert('Signup successful!');
+      alert("Signup successful!");
     }
   };
-  
+
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: '400px', margin: '50px auto' }}>
+    <form onSubmit={handleSubmit} style={{ maxWidth: "400px", margin: "50px auto" }}>
       <h1>Sign Up</h1>
-      
+
       {errors.length > 0 && (
-        <div style={{ color: 'red', marginBottom: '10px' }}>
-          {errors.map((error, i) => <div key={i}>{error}</div>)}
+        <div style={{ color: "red", marginBottom: "10px" }}>
+          {errors.map((error, i) => (
+            <div key={i}>{error}</div>
+          ))}
         </div>
       )}
-      
-      <div style={{ marginBottom: '15px' }}>
+
+      <div style={{ marginBottom: "15px" }}>
         <label>Email:</label>
-        <input 
-          type="email" 
-          value={email} 
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: '8px' }}
-        />
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: "100%", padding: "8px" }} />
       </div>
-      
-      <div style={{ marginBottom: '15px' }}>
+
+      <div style={{ marginBottom: "15px" }}>
         <label>Password:</label>
-        <input 
-          type="password" 
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', padding: '8px' }}
-        />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: "100%", padding: "8px" }} />
       </div>
-      
-      <button type="submit" style={{ padding: '10px 20px' }}>
+
+      <button type="submit" style={{ padding: "10px 20px" }}>
         Sign Up
       </button>
     </form>

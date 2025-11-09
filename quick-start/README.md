@@ -34,11 +34,7 @@ import { App, Route, createServer } from "react-server-app";
 
 const server = (
   <App port={3000}>
-    <Route 
-      path="/hello" 
-      method="GET" 
-      onRequest={() => ({ message: "Hello World!" })} 
-    />
+    <Route path="/hello" method="GET" onRequest={() => ({ message: "Hello World!" })} />
   </App>
 );
 
@@ -79,21 +75,17 @@ const server = (
   <App port={3000}>
     <Controller path="/api">
       <Controller path="/users">
-        <Route 
-          path="/" 
-          method="GET" 
-          onRequest={() => users} 
-        />
-        <Route 
-          path="/:id" 
-          method="GET" 
+        <Route path="/" method="GET" onRequest={() => users} />
+        <Route
+          path="/:id"
+          method="GET"
           onRequest={({ params }) => {
-            const user = users.find(u => u.id === params.id);
+            const user = users.find((u) => u.id === params.id);
             if (!user) {
               return { error: "User not found", status: 404 };
             }
             return user;
-          }} 
+          }}
         />
       </Controller>
     </Controller>
@@ -110,28 +102,28 @@ import { Guard } from "react-server-app";
 
 const authGuard = ({ request }) => {
   const token = request.headers.authorization?.replace("Bearer ", "");
-  
+
   if (!token || token !== "secret-token") {
     return {
       authorized: false,
       status: 401,
-      message: "Unauthorized"
+      message: "Unauthorized",
     };
   }
-  
+
   return { authorized: true, user: { id: "1", name: "Alice" } };
 };
 
 const server = (
   <App port={3000}>
     <Guard use={authGuard}>
-      <Route 
-        path="/protected" 
-        method="GET" 
-        onRequest={(ctx) => ({ 
+      <Route
+        path="/protected"
+        method="GET"
+        onRequest={(ctx) => ({
           message: "Secret data",
-          user: ctx.user // From guard context
-        })} 
+          user: ctx.user, // From guard context
+        })}
       />
     </Guard>
   </App>
@@ -148,7 +140,7 @@ import { useState } from "react";
 
 export default function Counter() {
   const [count, setCount] = useState(0);
-  
+
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Count: {count}</h1>
@@ -170,7 +162,7 @@ import Counter from "./pages/Counter";
       <Counter />
     </Page>
   )}
-/>
+/>;
 ```
 
 ## 🛠️ Development Tips
@@ -198,10 +190,10 @@ interface User {
   method="GET"
   onRequest={({ params }) => {
     // params.id is typed as string
-    const user = users.find(u => u.id === params.id);
+    const user = users.find((u) => u.id === params.id);
     return user!; // Return type is User
   }}
-/>
+/>;
 ```
 
 ### Use "use spa" Directive
